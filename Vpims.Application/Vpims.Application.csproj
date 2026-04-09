@@ -10,11 +10,4 @@
       <ProjectReference Include="..\Vpims.Domain\Vpims.Domain.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Common\" />
-      <Folder Include="DTOs\" />
-      <Folder Include="Interfaces\" />
-      <Folder Include="Services\" />
-    </ItemGroup>
-
 </Project>
