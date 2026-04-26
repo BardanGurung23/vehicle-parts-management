@@ -12,10 +12,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<Customer> Customers => Set<Customer>();
 
+    public DbSet<PartCategory> PartCategories => Set<PartCategory>();
+
+    public DbSet<Part> Parts => Set<Part>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+        modelBuilder.ApplyConfiguration(new PartCategoryConfiguration());
+        modelBuilder.ApplyConfiguration(new PartConfiguration());
     }
 }
