@@ -12,6 +12,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<Customer> Customers => Set<Customer>();
 
+    public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+
     public DbSet<PartCategory> PartCategories => Set<PartCategory>();
 
     public DbSet<Part> Parts => Set<Part>();
@@ -21,6 +23,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
         modelBuilder.ApplyConfiguration(new UserConfiguration());
         modelBuilder.ApplyConfiguration(new CustomerConfiguration());
+        modelBuilder.ApplyConfiguration(new VehicleConfiguration());
         modelBuilder.ApplyConfiguration(new PartCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new PartConfiguration());
     }

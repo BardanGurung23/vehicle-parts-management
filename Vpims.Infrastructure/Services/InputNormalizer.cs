@@ -28,4 +28,9 @@ internal static class InputNormalizer
 
         return builder.ToString();
     }
+
+    public static string NormalizeVehicleNumber(string value)
+    {
+        return string.Join(' ', value.Trim().ToUpperInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries));
+    }
 }

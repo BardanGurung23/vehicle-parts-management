@@ -1,14 +1,26 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vpims.Application.DTOs.Auth;
+using Vpims.Application.DTOs.Customers;
 using Vpims.Application.Interfaces.Services;
 
 namespace Vpims.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public sealed class AuthController(IAuthService authService) : ControllerBase
+public sealed class AuthController(IAuthService authService, ICustomerService customerService) : ControllerBase
 {
+    [AllowAnonymous]
+    [HttpPost("register")]
+    [ProducesResponseType<RegisterCustomerResponse>(StatusCodes.Status201Created)]
+    public async Task<ActionResult<RegisterCustomerResponse>> Register(
+        [FromBody] RegisterCustomerRequest request,
+        CancellationToken cancellationToken)
+    {
+        RegisterCustomerResponse response = await customerService.RegisterAsync(request, cancellationToken);
+        return Created($"/api/customers/{response.CustomerId}", response);
+    }
+
     [AllowAnonymous]
     [HttpPost("login")]
     [ProducesResponseType<AuthResponse>(StatusCodes.Status200OK)]

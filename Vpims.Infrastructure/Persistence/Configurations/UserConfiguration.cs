@@ -54,11 +54,6 @@ public sealed class UserConfiguration : IEntityTypeConfiguration<User>
             .HasForeignKey(user => user.RoleId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(user => user.Customer)
-            .WithOne(customer => customer.User)
-            .HasForeignKey<Customer>(customer => customer.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasIndex(user => user.Email)
             .IsUnique();
 

@@ -19,7 +19,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS customers (
     customer_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    user_id INTEGER NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id INTEGER UNIQUE REFERENCES users(user_id) ON DELETE SET NULL,
+    full_name VARCHAR(150) NOT NULL,
+    phone_number VARCHAR(20) NOT NULL UNIQUE,
+    email VARCHAR(150) UNIQUE,
     address TEXT,
     registered_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -28,13 +31,8 @@ CREATE TABLE IF NOT EXISTS vehicles (
     vehicle_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_id INTEGER NOT NULL REFERENCES customers(customer_id) ON DELETE CASCADE,
     vehicle_number VARCHAR(30) NOT NULL UNIQUE,
-    brand VARCHAR(80) NOT NULL,
-    model VARCHAR(80) NOT NULL,
-    year INTEGER,
-    engine_number VARCHAR(100),
-    chassis_number VARCHAR(100),
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    CONSTRAINT vehicles_year_check CHECK (year IS NULL OR year BETWEEN 1900 AND 2100)
+    model VARCHAR(80),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS vendors (

@@ -1,6 +1,6 @@
-namespace Vpims.Domain.Entities;
+namespace Vpims.Application.DTOs.Customers;
 
-public sealed class Customer
+public sealed class CustomerDetailResponse
 {
     public int CustomerId { get; set; }
 
@@ -16,7 +16,5 @@ public sealed class Customer
 
     public DateTimeOffset RegisteredAt { get; set; }
 
-    public User? User { get; set; }
-
-    public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
+    public IReadOnlyList<VehicleResponse> Vehicles { get; set; } = [];
 }

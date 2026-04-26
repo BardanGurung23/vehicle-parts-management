@@ -1,6 +1,67 @@
 @Vpims.API_HostAddress = http://localhost:5154
+@customerToken = replace-with-customer-jwt
+@staffToken = replace-with-staff-jwt
 
-GET {{Vpims.API_HostAddress}}/weatherforecast/
+POST {{Vpims.API_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+	"fullName": "Portal Customer",
+	"email": "portal.customer@autonix.local",
+	"phoneNumber": "+9779807778888",
+	"password": "DemoPass123!",
+	"address": "Kathmandu",
+	"vehicleNumber": "BA 7 PA 7007",
+	"vehicleModel": "City"
+}
+
+###
+
+POST {{Vpims.API_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+	"email": "portal.customer@autonix.local",
+	"password": "DemoPass123!"
+}
+
+###
+
+GET {{Vpims.API_HostAddress}}/api/customers/me
+Authorization: Bearer {{customerToken}}
+Accept: application/json
+
+###
+
+POST {{Vpims.API_HostAddress}}/api/customers
+Authorization: Bearer {{staffToken}}
+Content-Type: application/json
+
+{
+	"fullName": "Walk In Customer",
+	"phoneNumber": "+9779803334444",
+	"email": "walkin@autonix.local",
+	"address": "Pokhara",
+	"vehicleNumber": "GA 2 CHA 4321",
+	"vehicleModel": "Yaris"
+}
+
+###
+
+GET {{Vpims.API_HostAddress}}/api/customers/search?vehicleNumber=GA%202%20CHA%204321
+Authorization: Bearer {{staffToken}}
+Accept: application/json
+
+###
+
+GET {{Vpims.API_HostAddress}}/api/customers/search?name=portal
+Authorization: Bearer {{staffToken}}
+Accept: application/json
+
+###
+
+GET {{Vpims.API_HostAddress}}/api/customers/1
+Authorization: Bearer {{staffToken}}
 Accept: application/json
 
 ###

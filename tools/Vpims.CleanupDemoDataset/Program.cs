@@ -46,7 +46,7 @@ if (usersToRemove.Count == 0)
 
 List<int> userIds = usersToRemove.Select(item => item.UserId).ToList();
 List<int> customerIds = await dbContext.Customers
-    .Where(customer => userIds.Contains(customer.UserId))
+    .Where(customer => customer.UserId.HasValue && userIds.Contains(customer.UserId.Value))
     .Select(customer => customer.CustomerId)
     .ToListAsync();
 
