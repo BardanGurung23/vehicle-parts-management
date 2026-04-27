@@ -39,10 +39,11 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IStaffManagementService, StaffManagementService>();
         services.AddScoped<IPartService, PartService>();
         services.AddScoped<IPartRequestService, PartRequestService>();
         services.AddScoped<IServiceReviewService, ServiceReviewService>();
-        services.AddScoped<IStaffManagementService, StaffManagementService>();
 
         services.AddScoped<ISalesRepository, SaleRepository>();
         services.AddScoped<ISaleService, SalesService>();
