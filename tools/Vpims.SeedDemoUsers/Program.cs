@@ -1,11 +1,15 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Vpims.Application.DTOs.Customers;
 using Vpims.Application.DTOs.Users;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
+using Vpims.Domain.Entities;
 using Vpims.Infrastructure;
+using Vpims.Infrastructure.Persistence;
 
 string apiDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../Vpims.API"));
 
@@ -21,13 +25,20 @@ builder.Services.AddInfrastructureServices(builder.Configuration);
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
 
+var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
 var roleRepository = scope.ServiceProvider.GetRequiredService<IRoleRepository>();
 var customerService = scope.ServiceProvider.GetRequiredService<ICustomerService>();
 var staffManagementService = scope.ServiceProvider.GetRequiredService<IStaffManagementService>();
+var passwordHasher = scope.ServiceProvider.GetRequiredService<PasswordHasher<User>>();
 
-var roleMap = (await roleRepository.GetAssignableStaffRolesAsync())
-    .ToDictionary(role => role.Name, role => role.RoleId, StringComparer.OrdinalIgnoreCase);
+var roles = await dbContext.Roles
+    .AsNoTracking()
+    .ToListAsync();
+
+var roleMap = roles.ToDictionary(role => role.Name, role => role.RoleId, StringComparer.OrdinalIgnoreCase);
+
+await EnsurePartCategoriesAsync(dbContext);
 
 var demoAccounts = new DemoAccount[]
 {
@@ -42,9 +53,14 @@ var demoAccounts = new DemoAccount[]
 
 foreach (DemoAccount account in demoAccounts)
 {
-    if (await userRepository.ExistsByEmailAsync(account.Email))
+    User? existingUser = await dbContext.Users
+        .Include(user => user.Customer)
+        .FirstOrDefaultAsync(user => user.Email == account.Email);
+
+    if (existingUser is not null)
     {
-        Console.WriteLine($"Skipped existing account: {account.Email}");
+        await RepairExistingDemoAccountAsync(dbContext, passwordHasher, roleMap, existingUser, account);
+        Console.WriteLine($"Repaired existing account: {account.Email}");
         continue;
     }
 
@@ -82,6 +98,72 @@ foreach (DemoAccount account in demoAccounts)
 
 Console.WriteLine();
 Console.WriteLine("Demo login password for all seeded users: DemoPass123!");
+
+static async Task EnsurePartCategoriesAsync(AppDbContext dbContext)
+{
+    PartCategory[] defaultCategories =
+    [
+        new() { CategoryName = "Engine", Description = "Filters, belts, sensors, and engine service parts." },
+        new() { CategoryName = "Brakes", Description = "Pads, discs, cylinders, and brake hardware." },
+        new() { CategoryName = "Suspension", Description = "Shocks, bushings, arms, and alignment parts." },
+        new() { CategoryName = "Electrical", Description = "Batteries, lights, relays, and charging parts." }
+    ];
+
+    foreach (PartCategory category in defaultCategories)
+    {
+        bool exists = await dbContext.PartCategories
+            .AnyAsync(existing => existing.CategoryName == category.CategoryName);
+
+        if (!exists)
+        {
+            dbContext.PartCategories.Add(category);
+        }
+    }
+
+    await dbContext.SaveChangesAsync();
+}
+
+static async Task RepairExistingDemoAccountAsync(
+    AppDbContext dbContext,
+    PasswordHasher<User> passwordHasher,
+    IReadOnlyDictionary<string, int> roleMap,
+    User existingUser,
+    DemoAccount account)
+{
+    existingUser.FullName = account.FullName;
+    existingUser.PhoneNumber = account.PhoneNumber;
+    existingUser.IsActive = true;
+    existingUser.PasswordHash = passwordHasher.HashPassword(existingUser, account.Password);
+
+    if (account.Kind == DemoAccountKind.Customer)
+    {
+        if (!roleMap.TryGetValue(SystemRoles.Customer, out int customerRoleId))
+        {
+            throw new InvalidOperationException("Role 'Customer' is missing in the database.");
+        }
+
+        existingUser.RoleId = customerRoleId;
+
+        if (existingUser.Customer is not null)
+        {
+            existingUser.Customer.FullName = account.FullName;
+            existingUser.Customer.PhoneNumber = account.PhoneNumber;
+            existingUser.Customer.Email = account.Email;
+            existingUser.Customer.Address = account.Address;
+        }
+    }
+    else
+    {
+        if (!roleMap.TryGetValue(account.RoleName!, out int roleId))
+        {
+            throw new InvalidOperationException($"Role '{account.RoleName}' is missing in the database.");
+        }
+
+        existingUser.RoleId = roleId;
+    }
+
+    await dbContext.SaveChangesAsync();
+}
 
 internal enum DemoAccountKind
 {

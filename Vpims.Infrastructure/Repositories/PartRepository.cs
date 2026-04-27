@@ -28,6 +28,11 @@ public sealed class PartRepository(AppDbContext dbContext) : IPartRepository
         return dbContext.Parts.AnyAsync(p => p.PartNumber == partNumber, cancellationToken);
     }
 
+    public Task<bool> CategoryExistsAsync(int partCategoryId, CancellationToken cancellationToken = default)
+    {
+        return dbContext.PartCategories.AnyAsync(category => category.PartCategoryId == partCategoryId, cancellationToken);
+    }
+
     public async Task<Part> CreateAsync(Part part, CancellationToken cancellationToken = default)
     {
         dbContext.Parts.Add(part);

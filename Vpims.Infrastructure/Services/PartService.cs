@@ -26,6 +26,8 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         if (await partRepository.ExistsByPartNumberAsync(request.PartNumber.Trim(), cancellationToken))
             throw new AppValidationException($"A part with number '{request.PartNumber}' already exists.");
 
+        await EnsureCategoryExistsAsync(request.PartCategoryId, cancellationToken);
+
         var part = new Part
         {
             PartNumber = request.PartNumber.Trim(),
@@ -47,6 +49,8 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
     {
         var part = await partRepository.GetByIdAsync(partId, cancellationToken)
             ?? throw new NotFoundException($"Part with id {partId} not found.");
+
+        await EnsureCategoryExistsAsync(request.PartCategoryId, cancellationToken);
 
         part.PartName = request.PartName.Trim();
         part.Description = request.Description?.Trim();
@@ -76,6 +80,19 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
             CategoryName = c.CategoryName,
             Description = c.Description
         }).ToList();
+    }
+
+    private async Task EnsureCategoryExistsAsync(int? partCategoryId, CancellationToken cancellationToken)
+    {
+        if (!partCategoryId.HasValue)
+        {
+            return;
+        }
+
+        if (!await partRepository.CategoryExistsAsync(partCategoryId.Value, cancellationToken))
+        {
+            throw new AppValidationException("Selected part category was not found.");
+        }
     }
 
     private static PartResponse ToResponse(Part part) => new()

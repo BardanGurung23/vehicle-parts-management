@@ -7,6 +7,7 @@ public interface IPartRepository
     Task<IReadOnlyList<Part>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<Part?> GetByIdAsync(int partId, CancellationToken cancellationToken = default);
     Task<bool> ExistsByPartNumberAsync(string partNumber, CancellationToken cancellationToken = default);
+    Task<bool> CategoryExistsAsync(int partCategoryId, CancellationToken cancellationToken = default);
     Task<Part> CreateAsync(Part part, CancellationToken cancellationToken = default);
     Task<Part> UpdateAsync(Part part, CancellationToken cancellationToken = default);
     Task DeleteAsync(Part part, CancellationToken cancellationToken = default);

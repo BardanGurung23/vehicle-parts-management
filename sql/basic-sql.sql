@@ -51,6 +51,14 @@ CREATE TABLE IF NOT EXISTS part_categories (
     description TEXT
 );
 
+INSERT INTO part_categories (category_name, description)
+VALUES
+    ('Engine', 'Filters, belts, sensors, and engine service parts.'),
+    ('Brakes', 'Pads, discs, cylinders, and brake hardware.'),
+    ('Suspension', 'Shocks, bushings, arms, and alignment parts.'),
+    ('Electrical', 'Batteries, lights, relays, and charging parts.')
+ON CONFLICT (category_name) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS parts (
     part_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     part_category_id INTEGER REFERENCES part_categories(part_category_id) ON DELETE SET NULL,
