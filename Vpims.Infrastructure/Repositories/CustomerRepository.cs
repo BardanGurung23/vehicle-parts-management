@@ -84,12 +84,27 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
             .FirstOrDefaultAsync(customer => customer.UserId == userId, cancellationToken);
     }
 
+    public async Task<Customer?> GetTrackedByUserIdAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Customers
+            .Include(customer => customer.User)
+            .Include(customer => customer.Vehicles)
+            .FirstOrDefaultAsync(customer => customer.UserId == userId, cancellationToken);
+    }
+
     public async Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default)
     {
         await dbContext.SaveChangesAsync(cancellationToken);
         return (await GetByIdAsync(customer.CustomerId, cancellationToken))!;
     }
 
+    public async Task<Customer> RemoveVehicleAsync(Customer customer, Vehicle vehicle, CancellationToken cancellationToken = default)
+    {
+        dbContext.Vehicles.Remove(vehicle);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return (await GetByIdAsync(customer.CustomerId, cancellationToken))!;
+    }
     public async Task<IReadOnlyList<Customer>> SearchAsync(
         int? customerId,
         string? phoneNumber,

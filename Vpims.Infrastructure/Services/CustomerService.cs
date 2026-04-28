@@ -136,19 +136,31 @@ public sealed class CustomerService(
         UpdateCustomerProfileRequest request,
         CancellationToken cancellationToken = default)
     {
-        Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
+        Customer customer = await customerRepository.GetTrackedByUserIdAsync(currentUser.UserId, cancellationToken)
             ?? throw new NotFoundException("Customer profile not found.");
 
-        // Update customer properties
-        customer.FullName = request.FullName.Trim();
-        customer.PhoneNumber = request.PhoneNumber.Trim();
-        customer.Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim();
+        string fullName = InputNormalizer.NormalizeFullName(request.FullName);
+        string phoneNumber = InputNormalizer.NormalizePhoneNumber(request.PhoneNumber);
+        string email = NormalizeOptionalEmail(request.Email) ?? customer.Email ?? customer.User?.Email
+            ?? throw new AppValidationException("Customer email is required.");
+        string? address = NormalizeOptionalValue(request.Address);
 
-        // Update user email if needed (if email is part of the request)
-        // Note: The user entity might need to be updated separately if email changes
+        await EnsureUniqueProfileIdentityAsync(customer, email, phoneNumber, cancellationToken);
 
-        await customerRepository.UpdateAsync(customer, cancellationToken);
-        return UserMapper.ToCustomerDetailResponse(customer);
+        customer.FullName = fullName;
+        customer.PhoneNumber = phoneNumber;
+        customer.Email = email;
+        customer.Address = address;
+
+        if (customer.User is not null)
+        {
+            customer.User.FullName = fullName;
+            customer.User.PhoneNumber = phoneNumber;
+            customer.User.Email = email;
+        }
+
+        Customer updatedCustomer = await customerRepository.UpdateAsync(customer, cancellationToken);
+        return UserMapper.ToCustomerDetailResponse(updatedCustomer);
     }
 
     private async Task EnsureUniqueCustomerIdentityAsync(
@@ -174,6 +186,30 @@ public sealed class CustomerService(
             && await customerRepository.ExistsByVehicleNumberAsync(vehicleNumber, cancellationToken))
         {
             throw new AppValidationException("A vehicle with this number already exists.");
+        }
+    }
+
+    private async Task EnsureUniqueProfileIdentityAsync(
+        Customer customer,
+        string email,
+        string phoneNumber,
+        CancellationToken cancellationToken)
+    {
+        if (!string.Equals(customer.PhoneNumber, phoneNumber, StringComparison.Ordinal)
+            && (await customerRepository.ExistsByPhoneNumberAsync(phoneNumber, cancellationToken)
+                || await userRepository.ExistsByPhoneNumberAsync(phoneNumber, cancellationToken)))
+        {
+            throw new AppValidationException("A customer with this phone number already exists.");
+        }
+
+        string? currentEmail = customer.Email;
+        bool emailChanged = !string.Equals(currentEmail, email, StringComparison.Ordinal);
+
+        if (emailChanged
+            && (await customerRepository.ExistsByEmailAsync(email, cancellationToken)
+                || await userRepository.ExistsByEmailAsync(email, cancellationToken)))
+        {
+            throw new AppValidationException("A user with this email already exists.");
         }
     }
 
@@ -259,6 +295,21 @@ public sealed class CustomerService(
 
         Vehicle created = await customerRepository.AddVehicleAsync(customer.CustomerId, vehicle, cancellationToken);
         return UserMapper.ToVehicleResponse(created);
+    }
+
+    public async Task<CustomerDetailResponse> RemoveVehicleAsync(
+        UserProfileResponse currentUser,
+        int vehicleId,
+        CancellationToken cancellationToken = default)
+    {
+        Customer customer = await customerRepository.GetTrackedByUserIdAsync(currentUser.UserId, cancellationToken)
+            ?? throw new NotFoundException("Customer profile not found.");
+
+        Vehicle vehicle = customer.Vehicles.FirstOrDefault(item => item.VehicleId == vehicleId)
+            ?? throw new NotFoundException($"Vehicle with id {vehicleId} not found.");
+
+        Customer updatedCustomer = await customerRepository.RemoveVehicleAsync(customer, vehicle, cancellationToken);
+        return UserMapper.ToCustomerDetailResponse(updatedCustomer);
     }
 
     public async Task<IReadOnlyList<VehicleResponse>> GetMyVehiclesAsync(

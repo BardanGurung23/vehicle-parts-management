@@ -20,10 +20,13 @@ public interface ICustomerRepository
 
     Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default);
 
+<<<<<<< HEAD
+    Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default);
     Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<Customer>> SearchAsync(
-        int? customerId,
+    Task<Customer> AddVehicleAsync(Customer customer, Vehicle vehicle, CancellationToken cancellationToken = default);
+
+>>>>>>> 2da9d9e (feat: Implement customer profile update and vehicle management features)
         string? phoneNumber,
         string? vehicleNumber,
         string? name,

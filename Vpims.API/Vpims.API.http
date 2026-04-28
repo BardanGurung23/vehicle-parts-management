@@ -33,6 +33,35 @@ Accept: application/json
 
 ###
 
+PUT {{Vpims.API_HostAddress}}/api/customers/me
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+	"fullName": "Portal Customer Updated",
+	"email": "portal.customer.updated@autonix.local",
+	"phoneNumber": "+9779811112222",
+	"address": "Lalitpur"
+}
+
+###
+
+POST {{Vpims.API_HostAddress}}/api/customers/me/vehicles
+Authorization: Bearer {{customerToken}}
+Content-Type: application/json
+
+{
+	"vehicleNumber": "BA 3 PA 3300",
+	"vehicleModel": "Aqua"
+}
+
+###
+
+DELETE {{Vpims.API_HostAddress}}/api/customers/me/vehicles/1
+Authorization: Bearer {{customerToken}}
+
+###
+
 POST {{Vpims.API_HostAddress}}/api/customers
 Authorization: Bearer {{staffToken}}
 Content-Type: application/json

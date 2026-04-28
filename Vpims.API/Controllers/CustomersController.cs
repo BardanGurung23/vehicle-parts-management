@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Vpims.Application.DTOs.Auth;
-using Vpims.Application.DTOs.Customers;
 using Vpims.Application.DTOs.Appointments;
+using Vpims.Application.DTOs.Customers;
 using Vpims.Application.DTOs.Sales;
 using Vpims.Application.Interfaces.Services;
 
@@ -113,6 +113,16 @@ public sealed class CustomersController(
         UserProfileResponse currentUser = await authService.GetCurrentUserAsync(User, cancellationToken);
         VehicleResponse response = await customerService.AddVehicleAsync(currentUser, request, cancellationToken);
         return Created($"/api/customers/me/vehicles/{response.VehicleId}", response);
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpDelete("me/vehicles/{vehicleId:int}")]
+    [ProducesResponseType<CustomerDetailResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<CustomerDetailResponse>> RemoveVehicle(int vehicleId, CancellationToken cancellationToken)
+    {
+        UserProfileResponse currentUser = await authService.GetCurrentUserAsync(User, cancellationToken);
+        CustomerDetailResponse response = await customerService.RemoveVehicleAsync(currentUser, vehicleId, cancellationToken);
+        return Ok(response);
     }
 
     [Authorize(Roles = "Customer")]
