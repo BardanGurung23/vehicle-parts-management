@@ -8,7 +8,6 @@ The backend is an ASP.NET Core Web API solution organized around Clean Architect
 | --- | --- | --- |
 | `backend/README.md` | Backend setup, API scope, schema workflow, verification snapshot | Update when backend behavior, setup, or verification changes |
 | `frontend/README.md` | Active frontend runtime and feature status | Update when frontend flows or runtime paths change |
-| `doc/progress.md` | Full project roadmap and member-feature tracking | Update when delivered scope or status changes |
 
 When backend endpoints, DTOs, commands, architecture boundaries, or verification results change, update this file, `frontend/README.md`, and `doc/progress.md` in the same change set whenever shared project status also changes.
 
