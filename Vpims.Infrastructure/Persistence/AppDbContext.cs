@@ -18,6 +18,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<Part> Parts => Set<Part>();
 
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+
+    public DbSet<ServiceReview> ServiceReviews => Set<ServiceReview>();
+
+    public DbSet<PartRequest> PartRequests => Set<PartRequest>();
+
+    public DbSet<Vendor> Vendors => Set<Vendor>();
+
+    public DbSet<Sale> Sales => Set<Sale>();
+
+    public DbSet<SaleItem> SaleItems => Set<SaleItem>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
@@ -26,5 +38,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.ApplyConfiguration(new VehicleConfiguration());
         modelBuilder.ApplyConfiguration(new PartCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new PartConfiguration());
+        modelBuilder.ApplyConfiguration(new AppointmentConfiguration());
+        modelBuilder.ApplyConfiguration(new ServiceReviewConfiguration());
+        modelBuilder.ApplyConfiguration(new PartRequestConfiguration());
+        modelBuilder.ApplyConfiguration(new VendorConfiguration());
+        modelBuilder.ApplyConfiguration(new SaleConfiguration());
+        modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
     }
 }
