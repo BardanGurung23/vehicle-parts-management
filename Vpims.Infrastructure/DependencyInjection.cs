@@ -18,6 +18,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<DatabaseInitializationOptions>(configuration.GetSection(DatabaseInitializationOptions.SectionName));
 
         string connectionString = configuration.GetConnectionString("defaultConnection")
             ?? throw new InvalidOperationException("Connection string 'defaultConnection' is missing.");
@@ -26,6 +27,8 @@ public static class DependencyInjection
 
         services.AddScoped<PasswordHasher<User>>();
         services.AddScoped<JwtTokenGenerator>();
+        services.AddScoped<DemoDataSeeder>();
+        services.AddScoped<DatabaseInitializer>();
 
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();

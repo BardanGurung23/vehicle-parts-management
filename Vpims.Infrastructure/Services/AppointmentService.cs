@@ -26,7 +26,7 @@ public sealed class AppointmentService(
         {
             CustomerId = customer.CustomerId,
             VehicleId = request.VehicleId,
-            AppointmentDate = request.AppointmentDate,
+            AppointmentDate = request.AppointmentDate.ToUniversalTime(),
             ServiceType = request.ServiceType.Trim(),
             Notes = request.Notes?.Trim(),
             Status = "Pending",

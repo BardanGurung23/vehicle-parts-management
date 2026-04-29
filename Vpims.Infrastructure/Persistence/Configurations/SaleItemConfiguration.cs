@@ -8,16 +8,16 @@ public sealed class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
 {
     public void Configure(EntityTypeBuilder<SaleItem> builder)
     {
-        builder.ToTable("sale_items");
+        builder.ToTable("sales_invoice_items");
 
         builder.HasKey(si => si.SaleItemId);
 
         builder.Property(si => si.SaleItemId)
-            .HasColumnName("sale_item_id")
+            .HasColumnName("sales_invoice_item_id")
             .ValueGeneratedOnAdd();
 
         builder.Property(si => si.SaleId)
-            .HasColumnName("sale_id")
+            .HasColumnName("sales_invoice_id")
             .IsRequired();
 
         builder.Property(si => si.PartId)
@@ -30,7 +30,12 @@ public sealed class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
 
         builder.Property(si => si.UnitPrice)
             .HasColumnName("unit_price")
-            .HasColumnType("decimal(18,2)")
+            .HasColumnType("numeric(12,2)")
+            .IsRequired();
+
+        builder.Property(si => si.LineTotal)
+            .HasColumnName("line_total")
+            .HasColumnType("numeric(12,2)")
             .IsRequired();
 
         builder.HasOne(si => si.Sale)
@@ -44,9 +49,9 @@ public sealed class SaleItemConfiguration : IEntityTypeConfiguration<SaleItem>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(si => si.SaleId)
-            .HasDatabaseName("ix_sale_items_sale_id");
+            .HasDatabaseName("ix_sales_invoice_items_sales_invoice_id");
 
         builder.HasIndex(si => si.PartId)
-            .HasDatabaseName("ix_sale_items_part_id");
+            .HasDatabaseName("ix_sales_invoice_items_part_id");
     }
 }

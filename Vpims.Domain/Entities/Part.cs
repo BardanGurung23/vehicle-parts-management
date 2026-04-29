@@ -6,6 +6,8 @@ public sealed class Part
 
     public int? PartCategoryId { get; set; }
 
+    public int? VendorId { get; set; }
+
     public string PartNumber { get; set; } = string.Empty;
 
     public string PartName { get; set; } = string.Empty;
@@ -23,4 +25,6 @@ public sealed class Part
     public DateTimeOffset CreatedAt { get; set; }
 
     public PartCategory? Category { get; set; }
+
+    public Vendor? Vendor { get; set; }
 }

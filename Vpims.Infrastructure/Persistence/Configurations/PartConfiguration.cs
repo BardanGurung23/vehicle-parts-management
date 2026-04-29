@@ -19,6 +19,9 @@ public sealed class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.Property(p => p.PartCategoryId)
             .HasColumnName("part_category_id");
 
+        builder.Property(p => p.VendorId)
+            .HasColumnName("vendor_id");
+
         builder.Property(p => p.PartNumber)
             .HasColumnName("part_number")
             .HasMaxLength(50)
@@ -62,8 +65,14 @@ public sealed class PartConfiguration : IEntityTypeConfiguration<Part>
             .HasForeignKey(p => p.PartCategoryId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasOne(p => p.Vendor)
+            .WithMany(v => v.Parts)
+            .HasForeignKey(p => p.VendorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(p => p.PartNumber).IsUnique();
         builder.HasIndex(p => p.PartName).HasDatabaseName("ix_parts_part_name");
         builder.HasIndex(p => p.StockQuantity).HasDatabaseName("ix_parts_stock_quantity");
+        builder.HasIndex(p => p.VendorId).HasDatabaseName("ix_parts_vendor_id");
     }
 }

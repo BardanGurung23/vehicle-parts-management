@@ -30,6 +30,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<SaleItem> SaleItems => Set<SaleItem>();
 
+    public DbSet<PurchaseInvoice> PurchaseInvoices => Set<PurchaseInvoice>();
+
+    public DbSet<PurchaseInvoiceItem> PurchaseInvoiceItems => Set<PurchaseInvoiceItem>();
+
+    public DbSet<PredictiveAlert> PredictiveAlerts => Set<PredictiveAlert>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
@@ -44,5 +50,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.ApplyConfiguration(new VendorConfiguration());
         modelBuilder.ApplyConfiguration(new SaleConfiguration());
         modelBuilder.ApplyConfiguration(new SaleItemConfiguration());
+        modelBuilder.ApplyConfiguration(new PurchaseInvoiceConfiguration());
+        modelBuilder.ApplyConfiguration(new PurchaseInvoiceItemConfiguration());
+        modelBuilder.ApplyConfiguration(new PredictiveAlertConfiguration());
     }
 }

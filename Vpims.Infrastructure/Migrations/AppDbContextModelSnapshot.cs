@@ -188,7 +188,8 @@ namespace Vpims.Infrastructure.Migrations
                         .HasColumnName("unit_price");
 
                     b.Property<int?>("VendorId")
-                        .HasColumnType("integer");
+                        .HasColumnType("integer")
+                        .HasColumnName("vendor_id");
 
                     b.HasKey("PartId");
 
@@ -203,7 +204,8 @@ namespace Vpims.Infrastructure.Migrations
                     b.HasIndex("StockQuantity")
                         .HasDatabaseName("ix_parts_stock_quantity");
 
-                    b.HasIndex("VendorId");
+                    b.HasIndex("VendorId")
+                        .HasDatabaseName("ix_parts_vendor_id");
 
                     b.ToTable("parts", (string)null);
                 });
@@ -240,7 +242,7 @@ namespace Vpims.Infrastructure.Migrations
                     b.Property<int>("RequestId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("request_id");
+                        .HasColumnName("part_request_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("RequestId"));
 
@@ -287,7 +289,162 @@ namespace Vpims.Infrastructure.Migrations
 
                     b.HasIndex("VehicleId");
 
+                    b.HasIndex("Status", "RequestedAt")
+                        .HasDatabaseName("ix_part_requests_status_requested_at");
+
                     b.ToTable("part_requests", (string)null);
+                });
+
+            modelBuilder.Entity("Vpims.Domain.Entities.PredictiveAlert", b =>
+                {
+                    b.Property<int>("PredictiveAlertId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("predictive_alert_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PredictiveAlertId"));
+
+                    b.Property<string>("AlertMessage")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("alert_message");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("integer")
+                        .HasColumnName("customer_id");
+
+                    b.Property<int?>("PartId")
+                        .HasColumnType("integer")
+                        .HasColumnName("part_id");
+
+                    b.Property<string>("RiskLevel")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("risk_level");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Active")
+                        .HasColumnName("status");
+
+                    b.Property<int>("VehicleId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vehicle_id");
+
+                    b.HasKey("PredictiveAlertId");
+
+                    b.HasIndex("CustomerId")
+                        .HasDatabaseName("ix_predictive_alerts_customer_id");
+
+                    b.HasIndex("PartId");
+
+                    b.HasIndex("VehicleId")
+                        .HasDatabaseName("ix_predictive_alerts_vehicle_id");
+
+                    b.ToTable("predictive_alerts", (string)null);
+                });
+
+            modelBuilder.Entity("Vpims.Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.Property<int>("PurchaseInvoiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_invoice_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PurchaseInvoiceId"));
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_user_id");
+
+                    b.Property<DateTimeOffset>("InvoiceDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("invoice_date")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("invoice_number");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Completed")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("total_amount");
+
+                    b.Property<int>("VendorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("vendor_id");
+
+                    b.HasKey("PurchaseInvoiceId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique();
+
+                    b.HasIndex("VendorId")
+                        .HasDatabaseName("ix_purchase_invoices_vendor_id");
+
+                    b.ToTable("purchase_invoices", (string)null);
+                });
+
+            modelBuilder.Entity("Vpims.Domain.Entities.PurchaseInvoiceItem", b =>
+                {
+                    b.Property<int>("PurchaseInvoiceItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_invoice_item_id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("PurchaseInvoiceItemId"));
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("line_total");
+
+                    b.Property<int>("PartId")
+                        .HasColumnType("integer")
+                        .HasColumnName("part_id");
+
+                    b.Property<int>("PurchaseInvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("purchase_invoice_id");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<decimal>("UnitCost")
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("unit_cost");
+
+                    b.HasKey("PurchaseInvoiceItemId");
+
+                    b.HasIndex("PartId")
+                        .HasDatabaseName("ix_purchase_invoice_items_part_id");
+
+                    b.HasIndex("PurchaseInvoiceId");
+
+                    b.ToTable("purchase_invoice_items", (string)null);
                 });
 
             modelBuilder.Entity("Vpims.Domain.Entities.Role", b =>
@@ -323,26 +480,58 @@ namespace Vpims.Infrastructure.Migrations
                     b.Property<int>("SaleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("sale_id");
+                        .HasColumnName("sales_invoice_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SaleId"));
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("created_by_user_id");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
 
+                    b.Property<decimal>("DiscountAmount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("numeric(12,2)")
+                        .HasDefaultValue(0m)
+                        .HasColumnName("discount_amount");
+
+                    b.Property<DateTimeOffset?>("DueDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_date");
+
+                    b.Property<string>("InvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("invoice_number");
+
                     b.Property<string>("Notes")
                         .HasColumnType("text")
                         .HasColumnName("notes");
 
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasDefaultValue("Paid")
+                        .HasColumnName("payment_status");
+
                     b.Property<DateTimeOffset>("SaleDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("sale_date")
+                        .HasColumnName("invoice_date")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<decimal>("Subtotal")
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("subtotal");
+
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(12,2)")
                         .HasColumnName("total_amount");
 
                     b.Property<int?>("VehicleId")
@@ -351,15 +540,21 @@ namespace Vpims.Infrastructure.Migrations
 
                     b.HasKey("SaleId");
 
+                    b.HasIndex("CreatedByUserId");
+
                     b.HasIndex("CustomerId")
-                        .HasDatabaseName("ix_sales_customer_id");
+                        .HasDatabaseName("ix_sales_invoices_customer_id");
 
-                    b.HasIndex("SaleDate")
-                        .HasDatabaseName("ix_sales_sale_date");
+                    b.HasIndex("InvoiceNumber")
+                        .IsUnique();
 
-                    b.HasIndex("VehicleId");
+                    b.HasIndex("VehicleId")
+                        .HasDatabaseName("ix_sales_invoices_vehicle_id");
 
-                    b.ToTable("sales", (string)null);
+                    b.HasIndex("PaymentStatus", "DueDate")
+                        .HasDatabaseName("ix_sales_invoices_payment_status_due_date");
+
+                    b.ToTable("sales_invoices", (string)null);
                 });
 
             modelBuilder.Entity("Vpims.Domain.Entities.SaleItem", b =>
@@ -367,9 +562,13 @@ namespace Vpims.Infrastructure.Migrations
                     b.Property<int>("SaleItemId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer")
-                        .HasColumnName("sale_item_id");
+                        .HasColumnName("sales_invoice_item_id");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("SaleItemId"));
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("numeric(12,2)")
+                        .HasColumnName("line_total");
 
                     b.Property<int>("PartId")
                         .HasColumnType("integer")
@@ -381,21 +580,21 @@ namespace Vpims.Infrastructure.Migrations
 
                     b.Property<int>("SaleId")
                         .HasColumnType("integer")
-                        .HasColumnName("sale_id");
+                        .HasColumnName("sales_invoice_id");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)")
+                        .HasColumnType("numeric(12,2)")
                         .HasColumnName("unit_price");
 
                     b.HasKey("SaleItemId");
 
                     b.HasIndex("PartId")
-                        .HasDatabaseName("ix_sale_items_part_id");
+                        .HasDatabaseName("ix_sales_invoice_items_part_id");
 
                     b.HasIndex("SaleId")
-                        .HasDatabaseName("ix_sale_items_sale_id");
+                        .HasDatabaseName("ix_sales_invoice_items_sales_invoice_id");
 
-                    b.ToTable("sale_items", (string)null);
+                    b.ToTable("sales_invoice_items", (string)null);
                 });
 
             modelBuilder.Entity("Vpims.Domain.Entities.ServiceReview", b =>
@@ -631,11 +830,14 @@ namespace Vpims.Infrastructure.Migrations
                         .HasForeignKey("PartCategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Vpims.Domain.Entities.Vendor", null)
+                    b.HasOne("Vpims.Domain.Entities.Vendor", "Vendor")
                         .WithMany("Parts")
-                        .HasForeignKey("VendorId");
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Category");
+
+                    b.Navigation("Vendor");
                 });
 
             modelBuilder.Entity("Vpims.Domain.Entities.PartRequest", b =>
@@ -656,8 +858,78 @@ namespace Vpims.Infrastructure.Migrations
                     b.Navigation("Vehicle");
                 });
 
+            modelBuilder.Entity("Vpims.Domain.Entities.PredictiveAlert", b =>
+                {
+                    b.HasOne("Vpims.Domain.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vpims.Domain.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Vpims.Domain.Entities.Vehicle", "Vehicle")
+                        .WithMany()
+                        .HasForeignKey("VehicleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Part");
+
+                    b.Navigation("Vehicle");
+                });
+
+            modelBuilder.Entity("Vpims.Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.HasOne("Vpims.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Vpims.Domain.Entities.Vendor", "Vendor")
+                        .WithMany()
+                        .HasForeignKey("VendorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Vendor");
+                });
+
+            modelBuilder.Entity("Vpims.Domain.Entities.PurchaseInvoiceItem", b =>
+                {
+                    b.HasOne("Vpims.Domain.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Vpims.Domain.Entities.PurchaseInvoice", "PurchaseInvoice")
+                        .WithMany("Items")
+                        .HasForeignKey("PurchaseInvoiceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+
+                    b.Navigation("PurchaseInvoice");
+                });
+
             modelBuilder.Entity("Vpims.Domain.Entities.Sale", b =>
                 {
+                    b.HasOne("Vpims.Domain.Entities.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Vpims.Domain.Entities.Customer", "Customer")
                         .WithMany("Sales")
                         .HasForeignKey("CustomerId")
@@ -668,6 +940,8 @@ namespace Vpims.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("VehicleId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Customer");
 
@@ -749,6 +1023,11 @@ namespace Vpims.Infrastructure.Migrations
             modelBuilder.Entity("Vpims.Domain.Entities.PartCategory", b =>
                 {
                     b.Navigation("Parts");
+                });
+
+            modelBuilder.Entity("Vpims.Domain.Entities.PurchaseInvoice", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Vpims.Domain.Entities.Role", b =>

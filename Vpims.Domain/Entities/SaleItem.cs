@@ -16,6 +16,9 @@ public sealed class SaleItem
     [Range(0.01, double.MaxValue)]
     public decimal UnitPrice { get; set; }
 
+    [Range(0, double.MaxValue)]
+    public decimal LineTotal { get; set; }
+
     public Sale? Sale { get; set; }
 
     public Part? Part { get; set; }

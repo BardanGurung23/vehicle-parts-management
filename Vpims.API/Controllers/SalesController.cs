@@ -8,7 +8,6 @@ namespace Vpims.API.Controllers;
 
 [ApiController]
 [Route("api/sales")]
-[Authorize(Roles = "Customer")]
 public sealed class SalesController : ControllerBase
 {
     private readonly ISaleService _salesService;
@@ -18,6 +17,7 @@ public sealed class SalesController : ControllerBase
         _salesService = salesService;
     }
 
+    [Authorize(Roles = "Customer")]
     [HttpGet("me")]
     [ProducesResponseType<IReadOnlyList<SaleResponse>>(StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<SaleResponse>>> GetMySales(CancellationToken cancellationToken)
@@ -27,6 +27,7 @@ public sealed class SalesController : ControllerBase
         return Ok(sales);
     }
 
+    [Authorize(Roles = "Customer")]
     [HttpGet("{saleId:int}")]
     [ProducesResponseType<SaleResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -38,6 +39,7 @@ public sealed class SalesController : ControllerBase
         return Ok(sale);
     }
 
+    [Authorize(Roles = "Customer,Admin,Staff")]
     [HttpPost]
     [ProducesResponseType<SaleResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Vpims.API.Middlewares;
 using Vpims.Application.Common;
 using Vpims.Infrastructure;
+using Vpims.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -55,8 +56,8 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<Vpims.Infrastructure.Persistence.AppDbContext>();
-    await db.Database.EnsureCreatedAsync();
+    var databaseInitializer = scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
+    await databaseInitializer.InitializeAsync();
 }
 
 if (app.Environment.IsDevelopment())

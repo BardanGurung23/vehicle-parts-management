@@ -13,7 +13,7 @@ public sealed class PartRequestConfiguration : IEntityTypeConfiguration<PartRequ
         builder.HasKey(request => request.RequestId);
 
         builder.Property(request => request.RequestId)
-            .HasColumnName("request_id")
+            .HasColumnName("part_request_id")
             .ValueGeneratedOnAdd();
 
         builder.Property(request => request.CustomerId)
@@ -48,6 +48,9 @@ public sealed class PartRequestConfiguration : IEntityTypeConfiguration<PartRequ
 
         builder.HasIndex(request => request.CustomerId)
             .HasDatabaseName("ix_part_requests_customer_id");
+
+        builder.HasIndex(request => new { request.Status, request.RequestedAt })
+            .HasDatabaseName("ix_part_requests_status_requested_at");
 
         builder.HasOne(request => request.Customer)
             .WithMany()

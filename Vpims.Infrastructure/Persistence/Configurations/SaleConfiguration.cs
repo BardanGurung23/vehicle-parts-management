@@ -9,12 +9,12 @@ public sealed class SaleConfiguration : IEntityTypeConfiguration<Sale>
 {
     public void Configure(EntityTypeBuilder<Sale> builder)
     {
-        builder.ToTable("sales");
+        builder.ToTable("sales_invoices");
 
         builder.HasKey(s => s.SaleId);
 
         builder.Property(s => s.SaleId)
-            .HasColumnName("sale_id")
+            .HasColumnName("sales_invoice_id")
             .ValueGeneratedOnAdd();
 
         builder.Property(s => s.CustomerId)
@@ -24,16 +24,45 @@ public sealed class SaleConfiguration : IEntityTypeConfiguration<Sale>
         builder.Property(s => s.VehicleId)
             .HasColumnName("vehicle_id");
 
+        builder.Property(s => s.CreatedByUserId)
+            .HasColumnName("created_by_user_id")
+            .IsRequired();
+
+        builder.Property(s => s.InvoiceNumber)
+            .HasColumnName("invoice_number")
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.Property(s => s.Subtotal)
+            .HasColumnName("subtotal")
+            .HasColumnType("numeric(12,2)")
+            .IsRequired();
+
+        builder.Property(s => s.DiscountAmount)
+            .HasColumnName("discount_amount")
+            .HasColumnType("numeric(12,2)")
+            .HasDefaultValue(0m)
+            .IsRequired();
+
         builder.Property(s => s.TotalAmount)
             .HasColumnName("total_amount")
-            .HasColumnType("decimal(18,2)")
+            .HasColumnType("numeric(12,2)")
             .IsRequired();
+
+        builder.Property(s => s.PaymentStatus)
+            .HasColumnName("payment_status")
+            .HasMaxLength(30)
+            .HasDefaultValue("Paid")
+            .IsRequired();
+
+        builder.Property(s => s.DueDate)
+            .HasColumnName("due_date");
 
         builder.Property(s => s.Notes)
             .HasColumnName("notes");
 
         builder.Property(s => s.SaleDate)
-            .HasColumnName("sale_date")
+            .HasColumnName("invoice_date")
             .HasDefaultValueSql("NOW()")
             .IsRequired();
 
@@ -47,10 +76,21 @@ public sealed class SaleConfiguration : IEntityTypeConfiguration<Sale>
             .HasForeignKey(s => s.VehicleId)
             .OnDelete(DeleteBehavior.SetNull);
 
-        builder.HasIndex(s => s.CustomerId)
-            .HasDatabaseName("ix_sales_customer_id");
+        builder.HasOne(s => s.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(s => s.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(s => s.SaleDate)
-            .HasDatabaseName("ix_sales_sale_date");
+        builder.HasIndex(s => s.CustomerId)
+            .HasDatabaseName("ix_sales_invoices_customer_id");
+
+        builder.HasIndex(s => s.VehicleId)
+            .HasDatabaseName("ix_sales_invoices_vehicle_id");
+
+        builder.HasIndex(s => s.InvoiceNumber)
+            .IsUnique();
+
+        builder.HasIndex(s => new { s.PaymentStatus, s.DueDate })
+            .HasDatabaseName("ix_sales_invoices_payment_status_due_date");
     }
 }

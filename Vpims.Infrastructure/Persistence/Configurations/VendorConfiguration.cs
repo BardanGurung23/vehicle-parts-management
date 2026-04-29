@@ -41,6 +41,11 @@ public sealed class VendorConfiguration : IEntityTypeConfiguration<Vendor>
             .HasDefaultValueSql("NOW()")
             .IsRequired();
 
+        builder.HasMany(v => v.Parts)
+            .WithOne(p => p.Vendor)
+            .HasForeignKey(p => p.VendorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
         builder.HasIndex(v => v.VendorName)
             .HasDatabaseName("ix_vendors_vendor_name");
     }

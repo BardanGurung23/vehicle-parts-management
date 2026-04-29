@@ -13,6 +13,8 @@ public sealed class CreateSaleItemRequest
 
 public sealed class CreateSaleRequest
 {
+    public int? CustomerId { get; set; }
+
     public int? VehicleId { get; set; }
 
     [MinLength(1)]

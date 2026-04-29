@@ -106,7 +106,7 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         StockQuantity = part.StockQuantity,
         ReorderLevel = part.ReorderLevel,
         PartCategoryId = part.PartCategoryId,
-        CategoryName = part.Category?.CategoryName ?? string.Empty,
+        CategoryName = part.Category?.CategoryName,
         CreatedAt = part.CreatedAt
     };
 }
