@@ -1,3 +1,4 @@
+using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Customers;
 
 namespace Vpims.Application.Interfaces.Services;
@@ -13,4 +14,13 @@ public interface ICustomerService
     Task<CustomerDetailResponse> GetCustomerByIdAsync(int customerId, CancellationToken cancellationToken = default);
 
     Task<CustomerDetailResponse> GetCustomerByUserIdAsync(int userId, CancellationToken cancellationToken = default);
+
+    Task<CustomerDetailResponse> UpdateCustomerProfileAsync(
+        UserProfileResponse currentUser,
+        UpdateCustomerProfileRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<VehicleResponse> AddVehicleAsync(UserProfileResponse currentUser, CreateVehicleRequest request, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<VehicleResponse>> GetMyVehiclesAsync(UserProfileResponse currentUser, CancellationToken cancellationToken = default);
 }

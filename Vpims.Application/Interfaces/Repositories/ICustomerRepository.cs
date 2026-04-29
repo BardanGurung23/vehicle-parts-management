@@ -16,7 +16,11 @@ public interface ICustomerRepository
 
     Task<Customer?> GetByIdAsync(int customerId, CancellationToken cancellationToken = default);
 
+    Task<Customer?> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default);
+
     Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default);
+
+    Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Customer>> SearchAsync(
         int? customerId,
@@ -24,4 +28,8 @@ public interface ICustomerRepository
         string? vehicleNumber,
         string? name,
         CancellationToken cancellationToken = default);
+
+    Task<Vehicle> AddVehicleAsync(int customerId, Vehicle vehicle, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default);
 }

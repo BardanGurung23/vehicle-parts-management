@@ -72,10 +72,22 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
             .FirstOrDefaultAsync(customer => customer.CustomerId == customerId, cancellationToken);
     }
 
+    public async Task<Customer?> GetByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
+    {
+        return await QueryCustomers()
+            .FirstOrDefaultAsync(customer => customer.CustomerId == customerId, cancellationToken);
+    }
+
     public async Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default)
     {
         return await QueryCustomers()
             .FirstOrDefaultAsync(customer => customer.UserId == userId, cancellationToken);
+    }
+
+    public async Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default)
+    {
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return (await GetByIdAsync(customer.CustomerId, cancellationToken))!;
     }
 
     public async Task<IReadOnlyList<Customer>> SearchAsync(
@@ -118,5 +130,23 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
         return dbContext.Customers
             .AsNoTracking()
             .Include(customer => customer.Vehicles);
+    }
+
+    public async Task<Vehicle> AddVehicleAsync(int customerId, Vehicle vehicle, CancellationToken cancellationToken = default)
+    {
+        vehicle.CustomerId = customerId;
+        vehicle.CreatedAt = DateTimeOffset.UtcNow;
+        dbContext.Vehicles.Add(vehicle);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return vehicle;
+    }
+
+    public async Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Vehicles
+            .AsNoTracking()
+            .Where(v => v.CustomerId == customerId)
+            .OrderByDescending(v => v.CreatedAt)
+            .ToListAsync(cancellationToken);
     }
 }

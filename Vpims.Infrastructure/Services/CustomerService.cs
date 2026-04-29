@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Vpims.Application.Common.Exceptions;
+using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Customers;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
@@ -130,6 +131,26 @@ public sealed class CustomerService(
         return UserMapper.ToCustomerDetailResponse(customer);
     }
 
+    public async Task<CustomerDetailResponse> UpdateCustomerProfileAsync(
+        UserProfileResponse currentUser,
+        UpdateCustomerProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
+            ?? throw new NotFoundException("Customer profile not found.");
+
+        // Update customer properties
+        customer.FullName = request.FullName.Trim();
+        customer.PhoneNumber = request.PhoneNumber.Trim();
+        customer.Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim();
+
+        // Update user email if needed (if email is part of the request)
+        // Note: The user entity might need to be updated separately if email changes
+
+        await customerRepository.UpdateAsync(customer, cancellationToken);
+        return UserMapper.ToCustomerDetailResponse(customer);
+    }
+
     private async Task EnsureUniqueCustomerIdentityAsync(
         string? email,
         string phoneNumber,
@@ -212,5 +233,45 @@ public sealed class CustomerService(
         return string.IsNullOrWhiteSpace(value)
             ? null
             : InputNormalizer.NormalizeVehicleNumber(value);
+    }
+
+    public async Task<VehicleResponse> AddVehicleAsync(
+        UserProfileResponse currentUser,
+        CreateVehicleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
+            ?? throw new NotFoundException("Customer profile not found.");
+
+        string vehicleNumber = InputNormalizer.NormalizeVehicleNumber(request.VehicleNumber);
+
+        if (await customerRepository.ExistsByVehicleNumberAsync(vehicleNumber, cancellationToken))
+        {
+            throw new AppValidationException("A vehicle with this number already exists.");
+        }
+
+        var vehicle = new Vehicle
+        {
+            VehicleNumber = vehicleNumber,
+            Model = NormalizeOptionalValue(request.Model),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+
+        Vehicle created = await customerRepository.AddVehicleAsync(customer.CustomerId, vehicle, cancellationToken);
+        return UserMapper.ToVehicleResponse(created);
+    }
+
+    public async Task<IReadOnlyList<VehicleResponse>> GetMyVehiclesAsync(
+        UserProfileResponse currentUser,
+        CancellationToken cancellationToken = default)
+    {
+        Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
+            ?? throw new NotFoundException("Customer profile not found.");
+
+        IReadOnlyList<Vehicle> vehicles = await customerRepository.GetVehiclesByCustomerIdAsync(
+            customer.CustomerId,
+            cancellationToken);
+
+        return vehicles.Select(UserMapper.ToVehicleResponse).ToList();
     }
 }
