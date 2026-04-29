@@ -24,7 +24,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Vendors | ✅ Implemented | Vendor CRUD is available for admin users |
 | Appointments | ✅ Implemented | Customer booking and admin status management are live |
 | Sales | ✅ Implemented | Sales invoices, totals, and loyalty discount are live |
-| Purchase invoices | 🟡 Partial | Persistence exists, but full product workflow is still pending |
+| Purchase invoices | 🟡 Partial | Persistence and seeded demo data exist, but the full product workflow is still pending |
 | Notifications/reports | ⏳ Pending | Financial reports and automated alerts are still open |
 
 ## 🏗️ Solution Structure
@@ -77,7 +77,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Feature 13: Customer requests/reviews/appointments | ✅ Implemented | Booking, part requests, and reviews are supported |
 | Feature 14: Purchase and service history | ✅ Implemented | Purchase history and appointment history endpoints are live |
 | Feature 16: Loyalty discount | ✅ Implemented | 10% discount is applied to qualifying purchases |
-| Feature 4: Purchase invoices | 🟡 Partial | Domain/persistence support exists but full workflow remains incomplete |
+| Feature 4: Purchase invoices | 🟡 Partial | Domain/persistence support and seeded demo data exist, but the full workflow remains incomplete |
 | Feature 1 / 9 / 11 / 15 | ⏳ Pending | Reporting, invoice email, and notification workflows are still open |
 
 ## 📈 Project Progress Snapshot
@@ -113,6 +113,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Local browser testing allowed by current CORS configuration | ✅ |
 | Member 4 backend milestone | ✅ |
 | EF persistence for users, roles, customers, vehicles, parts, vendors, appointments, part requests, service reviews, sales invoices, purchase invoices, and predictive alerts | ✅ |
+| Purchase-invoice and predictive-alert workflow delivery | 🟡 Schema/demo-data coverage exists, but active API/UI and automated alert delivery are still pending |
 | Admin/bootstrap/demo tooling | ✅ |
 | Focused backend test project under `tests/` | ✅ |
 | `Vpims.CleanupDemoDataset` aligned with final EF schema | ✅ |
@@ -144,10 +145,10 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | --- | --- |
 | `dotnet build backend/vpims-backend.sln` | ✅ Passes |
 | `bash tests/run-backend-tests.sh` | ✅ Passes with 15/15 tests |
-| `dotnet run --project backend/Vpims.API --configuration Debug` | ✅ Applies migration/reset path and reaches listening state |
+| `dotnet run --project backend/Vpims.API --configuration Debug` | 🟡 Applies migration and seed path; this review hit a local port conflict before re-confirming a fresh listening state |
 | `npm --prefix frontend/admin run build` | ✅ Passes |
-| Browser smoke checks for admin login, dashboard, customer detail, parts workspace | ✅ Passes |
-| Live browser retests for booking, vehicles refresh, totals display, vendors/appointments shell copy, appointments action visibility | ✅ Passes |
+| Latest documented browser smoke checks for admin login, dashboard, customer detail, parts workspace | ✅ Passes |
+| Latest documented live browser retests for booking, vehicles refresh, totals display, vendors/appointments shell copy, appointments action visibility | ✅ Passes |
 | Frontend test command | ⏳ Not available because no suite is committed |
 
 ## 👨‍👩‍👧‍👦 Member Assignment Tracking
@@ -179,12 +180,36 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 
 ## 🔧 Local Commands
 
+### macOS / Linux
+
 | Task | Command |
 | --- | --- |
-| Run API | `DOTNET_ROOT="$HOME/.dotnet" dotnet run --project backend/Vpims.API --configuration Debug` |
-| Build solution | `DOTNET_ROOT="$HOME/.dotnet" dotnet build backend/vpims-backend.sln` |
+| Run backend API | `dotnet run --project backend/Vpims.API --configuration Debug` |
+| Run frontend admin app | `npm --prefix frontend/admin run start` |
+| Build backend solution | `dotnet build backend/vpims-backend.sln` |
+| Build frontend admin app | `npm --prefix frontend/admin run build` |
 | Run backend tests | `bash tests/run-backend-tests.sh` |
-| Bootstrap first admin | `bash backend/scripts/bootstrap-first-admin.sh` |
+| Bootstrap first admin | `bash backend/scripts/bootstrap-first-admin.sh "Full Name" email@example.com 9800000000 password` |
+
+### Windows PowerShell
+
+| Task | Command |
+| --- | --- |
+| Run backend API | `dotnet run --project backend/Vpims.API --configuration Debug` |
+| Run frontend admin app | `npm --prefix frontend/admin run start` |
+| Build backend solution | `dotnet build backend/vpims-backend.sln` |
+| Build frontend admin app | `npm --prefix frontend/admin run build` |
+| Run backend tests | `bash tests/run-backend-tests.sh` |
+| Bootstrap first admin | `bash backend/scripts/bootstrap-first-admin.sh "Full Name" email@example.com 9800000000 password` |
+
+Use Git Bash or WSL for the `bash` commands on Windows.
+
+### Default Local URLs
+
+| Service | URL |
+| --- | --- |
+| Backend API | `http://localhost:5154` |
+| Frontend admin app | `http://localhost:5173` |
 
 ## 👤 Demo Accounts
 
@@ -199,10 +224,11 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Step | Action |
 | --- | --- |
 | 1️⃣ | Configure `backend/Vpims.API/appsettings.Development.json` with the local PostgreSQL connection and JWT settings |
-| 2️⃣ | Start `Vpims.API` |
-| 3️⃣ | In Development or test, startup compares the existing local database with the committed EF migration baseline |
-| 4️⃣ | If the schema is missing or mismatched, the API drops and recreates the target database, applies the baseline migration, and seeds the canonical demo dataset |
-| 5️⃣ | Sign in with one of the demo accounts above to verify the seeded environment |
+| 2️⃣ | Start the backend API with the command for your OS from the Local Commands section |
+| 3️⃣ | Start the frontend admin app with the command for your OS from the Local Commands section after the API is up |
+| 4️⃣ | In Development or test, startup compares the existing local database with the committed EF migration baseline |
+| 5️⃣ | If the schema is missing or mismatched, the API drops and recreates the target database, applies the baseline migration, and seeds the canonical demo dataset |
+| 6️⃣ | Sign in with one of the demo accounts above to verify the seeded environment |
 
 ## 🎯 Highest-Priority Follow-Up
 
