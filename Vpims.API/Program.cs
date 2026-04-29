@@ -38,13 +38,19 @@ builder.Services.AddCors(options =>
     options.AddPolicy("frontend", policy =>
     {
         policy
-            .WithOrigins("http://localhost:7001", "http://127.0.0.1:7001", "http://localhost:4000", "http://127.0.0.1:4000")
+            .WithOrigins("http://localhost:7001", "http://127.0.0.1:7001", "http://localhost:4000", "http://127.0.0.1:4000", "http://localhost:7002")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<Vpims.Infrastructure.Persistence.AppDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 if (app.Environment.IsDevelopment())
 {
