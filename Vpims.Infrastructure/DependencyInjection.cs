@@ -31,11 +31,21 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IPartRepository, PartRepository>();
-
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
+        services.AddScoped<IPartRequestRepository, PartRequestRepository>();
+        services.AddScoped<IServiceReviewRepository, ServiceReviewRepository>();
+        services.AddScoped<IVendorRepository, VendorRepository>();
+        services.AddScoped<IVendorService, VendorService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerService, CustomerService>();
-        services.AddScoped<IStaffManagementService, StaffManagementService>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IPartService, PartService>();
+        services.AddScoped<IPartRequestService, PartRequestService>();
+        services.AddScoped<IServiceReviewService, ServiceReviewService>();
+        services.AddScoped<IStaffManagementService, StaffManagementService>();
+
+        services.AddScoped<ISalesRepository, SaleRepository>();
+        services.AddScoped<ISaleService, SalesService>();
 
         return services;
     }
