@@ -98,15 +98,15 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
     private static PartResponse ToResponse(Part part) => new()
     {
         PartId = part.PartId,
-        PartNumber = part.PartNumber,
-        PartName = part.PartName,
+        PartNumber = part.PartNumber ?? string.Empty,
+        PartName = part.PartName ?? string.Empty,
         Description = part.Description,
         UnitPrice = part.UnitPrice,
         CostPrice = part.CostPrice,
         StockQuantity = part.StockQuantity,
         ReorderLevel = part.ReorderLevel,
         PartCategoryId = part.PartCategoryId,
-        CategoryName = part.Category?.CategoryName,
+        CategoryName = part.Category?.CategoryName ?? string.Empty,
         CreatedAt = part.CreatedAt
     };
 }

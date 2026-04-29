@@ -6,10 +6,10 @@ using Vpims.Application.Interfaces.Services;
 namespace Vpims.API.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Admin,Staff")]
 [Route("api/parts")]
 public sealed class PartsController(IPartService partService) : ControllerBase
 {
+    [Authorize(Roles = "Customer,Admin,Staff")]
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<PartResponse>>> GetAll(CancellationToken cancellationToken)
     {
@@ -17,6 +17,7 @@ public sealed class PartsController(IPartService partService) : ControllerBase
         return Ok(parts);
     }
 
+    [Authorize(Roles = "Customer,Admin,Staff")]
     [HttpGet("{partId:int}")]
     public async Task<ActionResult<PartResponse>> GetById(int partId, CancellationToken cancellationToken)
     {
@@ -24,6 +25,7 @@ public sealed class PartsController(IPartService partService) : ControllerBase
         return Ok(part);
     }
 
+    [Authorize(Roles = "Customer,Admin,Staff")]
     [HttpGet("categories")]
     public async Task<ActionResult<IReadOnlyList<PartCategoryResponse>>> GetCategories(CancellationToken cancellationToken)
     {
