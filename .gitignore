@@ -22,6 +22,7 @@ Thumbs.db
 appsettings.Development.json
 scripts/bootstrap-first-admin.sh
 
-# Ignore Markdown
+# Ignore all Markdown except README.md
+!README.md
 *.md
 doc/
