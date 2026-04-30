@@ -116,6 +116,19 @@ public sealed class CustomersController(
     }
 
     [Authorize(Roles = "Customer")]
+    [HttpPut("me/vehicles/{vehicleId:int}")]
+    [ProducesResponseType<VehicleResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleResponse>> UpdateVehicle(
+        int vehicleId,
+        [FromBody] UpdateVehicleRequest request,
+        CancellationToken cancellationToken)
+    {
+        UserProfileResponse currentUser = await authService.GetCurrentUserAsync(User, cancellationToken);
+        VehicleResponse response = await customerService.UpdateVehicleAsync(currentUser, vehicleId, request, cancellationToken);
+        return Ok(response);
+    }
+
+    [Authorize(Roles = "Customer")]
     [HttpDelete("me/vehicles/{vehicleId:int}")]
     [ProducesResponseType<CustomerDetailResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<CustomerDetailResponse>> RemoveVehicle(int vehicleId, CancellationToken cancellationToken)

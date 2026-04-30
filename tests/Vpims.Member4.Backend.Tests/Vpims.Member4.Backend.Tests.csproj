@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../backend/Vpims.Application/Vpims.Application.csproj" />
-    <ProjectReference Include="../../backend/Vpims.Domain/Vpims.Domain.csproj" />
-    <ProjectReference Include="../../backend/Vpims.Infrastructure/Vpims.Infrastructure.csproj" />
+    <ProjectReference Include="../../Vpims.Application/Vpims.Application.csproj" />
+    <ProjectReference Include="../../Vpims.Domain/Vpims.Domain.csproj" />
+    <ProjectReference Include="../../Vpims.Infrastructure/Vpims.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

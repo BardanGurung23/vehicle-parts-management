@@ -35,5 +35,7 @@ public interface ICustomerRepository
 
     Task<Vehicle> AddVehicleAsync(int customerId, Vehicle vehicle, CancellationToken cancellationToken = default);
 
+    Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default);
 }

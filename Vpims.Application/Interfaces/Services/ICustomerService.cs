@@ -22,6 +22,12 @@ public interface ICustomerService
 
     Task<VehicleResponse> AddVehicleAsync(UserProfileResponse currentUser, CreateVehicleRequest request, CancellationToken cancellationToken = default);
 
+    Task<VehicleResponse> UpdateVehicleAsync(
+        UserProfileResponse currentUser,
+        int vehicleId,
+        UpdateVehicleRequest request,
+        CancellationToken cancellationToken = default);
+
     Task<CustomerDetailResponse> RemoveVehicleAsync(UserProfileResponse currentUser, int vehicleId, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<VehicleResponse>> GetMyVehiclesAsync(UserProfileResponse currentUser, CancellationToken cancellationToken = default);

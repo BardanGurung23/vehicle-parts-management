@@ -156,6 +156,12 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
         return vehicle;
     }
 
+    public async Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default)
+    {
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return vehicle;
+    }
+
     public async Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Vehicles

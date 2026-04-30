@@ -19,7 +19,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Auth | ✅ Implemented | Canonical self-registration and login live under `/api/auth/*` |
 | Final schema | ✅ Implemented | EF Core baseline migration is the single schema authority |
 | Dev/test reset | ✅ Implemented | Startup drops mismatched local DBs, reapplies schema, reseeds demo data |
-| Customer flows | ✅ Implemented | Staff create/search/detail and customer self-service profile plus vehicles are live |
+| Customer flows | ✅ Implemented | Staff create/search/detail plus customer signup, profile update, and vehicle add/edit/remove flows are live |
 | Staff admin | ✅ Implemented | Staff list, create, roles, and role update are live |
 | Vendors | ✅ Implemented | Vendor CRUD is available for admin users |
 | Appointments | ✅ Implemented | Customer booking and admin status management are live |
@@ -54,7 +54,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | 🌐 Area | Endpoints |
 | --- | --- |
 | Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
-| Customer self-service | `GET /api/customers/me`, `PUT /api/customers/me`, `POST /api/customers/me/vehicles`, `DELETE /api/customers/me/vehicles/{vehicleId}` |
+| Customer self-service | `POST /api/customers/register`, `GET /api/customers/me`, `PUT /api/customers/me`, `GET /api/customers/me/vehicles`, `POST /api/customers/me/vehicles`, `PUT /api/customers/me/vehicles/{vehicleId}`, `DELETE /api/customers/me/vehicles/{vehicleId}` |
 | Staff customer management | `POST /api/customers`, `GET /api/customers/search`, `GET /api/customers/{customerId}` |
 | Staff admin | `GET /api/admin/staff`, `POST /api/admin/staff`, `GET /api/admin/staff/roles`, `PUT /api/admin/staff/{userId}/role` |
 | Dashboard | `GET /api/dashboard/summary` |
@@ -73,7 +73,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Feature 6: Customer registration | ✅ Implemented | Staff can create customers with an initial vehicle |
 | Feature 7: Sales invoices | ✅ Implemented | Sales creation, invoice numbering, item totals, and retrieval are live |
 | Feature 10: Customer search | ✅ Implemented | Search by ID, phone, vehicle number, or name |
-| Feature 12: Customer self-service | ✅ Implemented | Self-registration, current customer detail, profile update, and vehicle add/remove are live |
+| Feature 12: Customer self-service | ✅ Implemented | Self-registration with optional initial vehicle capture, current customer detail, profile update, and vehicle add/edit/remove are live |
 | Feature 13: Customer requests/reviews/appointments | ✅ Implemented | Booking, part requests, and reviews are supported |
 | Feature 14: Purchase and service history | ✅ Implemented | Purchase history and appointment history endpoints are live |
 | Feature 16: Loyalty discount | ✅ Implemented | 10% discount is applied to qualifying purchases |
@@ -91,7 +91,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | PRD aligned with Clean Architecture exists in `doc/prd.md` | ✅ |
 | Supporting architecture, ERD, style guide, question tracking, and reporting docs exist in `doc/` | ✅ |
 | Clean Architecture boundaries are reflected in code | ✅ |
-| Progress roadmap refreshed against latest browser validation on 2026-04-29 | ✅ |
+| Progress roadmap refreshed against latest browser validation on 2026-04-29 and focused Member 4 verification on 2026-04-30 | ✅ |
 
 ### ⚙️ Backend Status Mirror
 
@@ -101,7 +101,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Clean Architecture solution with API, Application, Domain, Infrastructure, and CLI tooling | ✅ |
 | EF Core baseline migration as the single final schema authority | ✅ |
 | Dev/test startup auto-reset plus canonical demo seeding | ✅ |
-| Customer self-registration, login, current-customer detail, profile update, vehicle add/remove | ✅ |
+| Customer self-registration, login, current-customer detail, profile update, vehicle add/edit/remove | ✅ |
 | Staff management end to end | ✅ |
 | Staff/admin customer registration, search, and detail lookup | ✅ |
 | Parts inventory API end to end | ✅ |
@@ -144,7 +144,8 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Check | Result |
 | --- | --- |
 | `dotnet build backend/vpims-backend.sln` | ✅ Passes |
-| `bash tests/run-backend-tests.sh` | ✅ Passes with 15/15 tests |
+| `bash tests/run-backend-tests.sh` | ✅ Passes |
+| `dotnet test backend/tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 10/10 tests |
 | `dotnet run --project backend/Vpims.API --configuration Debug` | 🟡 Applies migration and seed path; this review hit a local port conflict before re-confirming a fresh listening state |
 | `npm --prefix frontend/admin run build` | ✅ Passes |
 | Latest documented browser smoke checks for admin login, dashboard, customer detail, parts workspace | ✅ Passes |
@@ -165,6 +166,9 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 
 | Delivered item | Status |
 | --- | --- |
+| Extended public customer signup so the active form can post an optional initial vehicle through `/api/customers/register` | ✅ |
+| Added customer vehicle edit support through `PUT /api/customers/me/vehicles/{vehicleId}` | ✅ |
+| Expanded focused Member 4 backend coverage for search filters, profile updates, and vehicle add/edit/remove/list flows | ✅ |
 | Replaced mixed manual SQL and `EnsureCreated` with final EF baseline migration plus reset logic | ✅ |
 | Added canonical demo-data seeding and aligned cleanup/bootstrap tooling | ✅ |
 | Expanded schema for vendors, sales invoices, purchase invoices, service reviews, and predictive alerts | ✅ |
@@ -235,7 +239,7 @@ Use Git Bash or WSL for the `bash` commands on Windows.
 | Priority item | Status |
 | --- | --- |
 | Commit a repeatable database migration workflow | ✅ |
-| Add regression coverage for appointment UTC persistence and customer vehicle refresh after add | ⏳ |
+| Add broader regression coverage for appointment UTC persistence and customer self-service vehicle flows | ⏳ |
 | Decide whether remaining active flows on older Redux services should move to the newer feature API layer | ⏳ |
 | Implement financial reports, purchase invoice workflow, invoice email delivery, and automated low-stock or overdue-credit notifications | ⏳ |
 | Expand employee-facing customer history views and related reports | ⏳ |

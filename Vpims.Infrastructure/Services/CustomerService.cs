@@ -297,6 +297,33 @@ public sealed class CustomerService(
         return UserMapper.ToVehicleResponse(created);
     }
 
+    public async Task<VehicleResponse> UpdateVehicleAsync(
+        UserProfileResponse currentUser,
+        int vehicleId,
+        UpdateVehicleRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        Customer customer = await customerRepository.GetTrackedByUserIdAsync(currentUser.UserId, cancellationToken)
+            ?? throw new NotFoundException("Customer profile not found.");
+
+        Vehicle vehicle = customer.Vehicles.FirstOrDefault(item => item.VehicleId == vehicleId)
+            ?? throw new NotFoundException($"Vehicle with id {vehicleId} not found.");
+
+        string vehicleNumber = InputNormalizer.NormalizeVehicleNumber(request.VehicleNumber);
+
+        if (!string.Equals(vehicle.VehicleNumber, vehicleNumber, StringComparison.Ordinal)
+            && await customerRepository.ExistsByVehicleNumberAsync(vehicleNumber, cancellationToken))
+        {
+            throw new AppValidationException("A vehicle with this number already exists.");
+        }
+
+        vehicle.VehicleNumber = vehicleNumber;
+        vehicle.Model = NormalizeOptionalValue(request.Model);
+
+        Vehicle updatedVehicle = await customerRepository.UpdateVehicleAsync(vehicle, cancellationToken);
+        return UserMapper.ToVehicleResponse(updatedVehicle);
+    }
+
     public async Task<CustomerDetailResponse> RemoveVehicleAsync(
         UserProfileResponse currentUser,
         int vehicleId,

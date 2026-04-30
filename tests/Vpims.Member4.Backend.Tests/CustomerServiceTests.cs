@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Vpims.Application.Common.Exceptions;
+using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Customers;
 using Vpims.Domain.Entities;
 using Vpims.Infrastructure.Persistence;
@@ -74,7 +75,7 @@ public sealed class CustomerServiceTests
     }
 
     [Fact]
-    public async Task SearchCustomersAsync_FiltersByVehicleAndName()
+    public async Task SearchCustomersAsync_FiltersByAllSupportedFields()
     {
         await using var harness = await TestHarness.CreateAsync();
 
@@ -110,6 +111,22 @@ public sealed class CustomerServiceTests
         CustomerSearchResultResponse nameMatch = Assert.Single(nameResults);
         Assert.Equal(firstCustomer.CustomerId, nameMatch.CustomerId);
         Assert.Equal(1, nameMatch.VehicleCount);
+
+        IReadOnlyList<CustomerSearchResultResponse> phoneResults = await harness.Service.SearchCustomersAsync(new SearchCustomersRequest
+        {
+            PhoneNumber = "+9779800001111"
+        });
+
+        CustomerSearchResultResponse phoneMatch = Assert.Single(phoneResults);
+        Assert.Equal(firstCustomer.CustomerId, phoneMatch.CustomerId);
+
+        IReadOnlyList<CustomerSearchResultResponse> customerIdResults = await harness.Service.SearchCustomersAsync(new SearchCustomersRequest
+        {
+            CustomerId = firstCustomer.CustomerId
+        });
+
+        CustomerSearchResultResponse customerIdMatch = Assert.Single(customerIdResults);
+        Assert.Equal(firstCustomer.CustomerId, customerIdMatch.CustomerId);
     }
 
     [Fact]
@@ -136,6 +153,163 @@ public sealed class CustomerServiceTests
     }
 
     [Fact]
+    public async Task UpdateCustomerProfileAsync_UpdatesCustomerAndLinkedUser()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        RegisterCustomerResponse registeredCustomer = await harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Profile Customer",
+            Email = "profile.customer@autonix.local",
+            PhoneNumber = "+9779801234567",
+            Password = "DemoPass123!"
+        });
+
+        UserProfileResponse currentUser = CreateCurrentUserProfile(registeredCustomer);
+
+        CustomerDetailResponse updatedCustomer = await harness.Service.UpdateCustomerProfileAsync(currentUser, new UpdateCustomerProfileRequest
+        {
+            FullName = "Updated Customer",
+            Email = "updated.customer@autonix.local",
+            PhoneNumber = "+9779807654321",
+            Address = "Bhaktapur"
+        });
+
+        Customer storedCustomer = await harness.DbContext.Customers.Include(customer => customer.User).SingleAsync();
+        User storedUser = Assert.IsType<User>(storedCustomer.User);
+
+        Assert.Equal("Updated Customer", updatedCustomer.FullName);
+        Assert.Equal("updated.customer@autonix.local", updatedCustomer.Email);
+        Assert.Equal("+9779807654321", updatedCustomer.PhoneNumber);
+        Assert.Equal("Bhaktapur", updatedCustomer.Address);
+        Assert.Equal("Updated Customer", storedCustomer.FullName);
+        Assert.Equal("updated.customer@autonix.local", storedCustomer.Email);
+        Assert.Equal("+9779807654321", storedCustomer.PhoneNumber);
+        Assert.Equal("Updated Customer", storedUser.FullName);
+        Assert.Equal("updated.customer@autonix.local", storedUser.Email);
+        Assert.Equal("+9779807654321", storedUser.PhoneNumber);
+    }
+
+    [Fact]
+    public async Task AddVehicleAsync_AddsVehicleForCurrentCustomer()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        RegisterCustomerResponse registeredCustomer = await harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Vehicle Customer",
+            Email = "vehicle.customer@autonix.local",
+            PhoneNumber = "+9779808881111",
+            Password = "DemoPass123!"
+        });
+
+        UserProfileResponse currentUser = CreateCurrentUserProfile(registeredCustomer);
+
+        VehicleResponse createdVehicle = await harness.Service.AddVehicleAsync(currentUser, new CreateVehicleRequest
+        {
+            VehicleNumber = "ba 8 pa 8080",
+            Model = "Aqua"
+        });
+
+        IReadOnlyList<VehicleResponse> vehicles = await harness.Service.GetMyVehiclesAsync(currentUser);
+
+        Assert.Equal("BA 8 PA 8080", createdVehicle.VehicleNumber);
+        Assert.Equal("Aqua", createdVehicle.Model);
+        VehicleResponse storedVehicle = Assert.Single(vehicles);
+        Assert.Equal(createdVehicle.VehicleId, storedVehicle.VehicleId);
+    }
+
+    [Fact]
+    public async Task UpdateVehicleAsync_UpdatesExistingVehicleDetails()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        RegisterCustomerResponse registeredCustomer = await harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Update Vehicle Customer",
+            Email = "update.vehicle@autonix.local",
+            PhoneNumber = "+9779805551111",
+            Password = "DemoPass123!",
+            VehicleNumber = "ba 3 pa 3003",
+            VehicleModel = "Swift"
+        });
+
+        UserProfileResponse currentUser = CreateCurrentUserProfile(registeredCustomer);
+        CustomerDetailResponse existingCustomer = await harness.Service.GetCustomerByUserIdAsync(registeredCustomer.UserId);
+
+        VehicleResponse updatedVehicle = await harness.Service.UpdateVehicleAsync(currentUser, existingCustomer.Vehicles[0].VehicleId, new UpdateVehicleRequest
+        {
+            VehicleNumber = "ba 3 pa 3333",
+            Model = "Baleno"
+        });
+
+        IReadOnlyList<VehicleResponse> vehicles = await harness.Service.GetMyVehiclesAsync(currentUser);
+
+        Assert.Equal(existingCustomer.Vehicles[0].VehicleId, updatedVehicle.VehicleId);
+        Assert.Equal("BA 3 PA 3333", updatedVehicle.VehicleNumber);
+        Assert.Equal("Baleno", updatedVehicle.Model);
+        Assert.Equal("BA 3 PA 3333", Assert.Single(vehicles).VehicleNumber);
+    }
+
+    [Fact]
+    public async Task RemoveVehicleAsync_RemovesVehicleFromCurrentCustomer()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        RegisterCustomerResponse registeredCustomer = await harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Remove Vehicle Customer",
+            Email = "remove.vehicle@autonix.local",
+            PhoneNumber = "+9779804441111",
+            Password = "DemoPass123!",
+            VehicleNumber = "ba 4 pa 4004",
+            VehicleModel = "Civic"
+        });
+
+        UserProfileResponse currentUser = CreateCurrentUserProfile(registeredCustomer);
+        CustomerDetailResponse existingCustomer = await harness.Service.GetCustomerByUserIdAsync(registeredCustomer.UserId);
+
+        CustomerDetailResponse updatedCustomer = await harness.Service.RemoveVehicleAsync(currentUser, existingCustomer.Vehicles[0].VehicleId);
+
+        Assert.Empty(updatedCustomer.Vehicles);
+        Assert.Empty(harness.DbContext.Vehicles);
+    }
+
+    [Fact]
+    public async Task GetMyVehiclesAsync_ReturnsAllVehiclesForCurrentCustomer()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        RegisterCustomerResponse registeredCustomer = await harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Fleet Customer",
+            Email = "fleet.customer@autonix.local",
+            PhoneNumber = "+9779802221111",
+            Password = "DemoPass123!"
+        });
+
+        UserProfileResponse currentUser = CreateCurrentUserProfile(registeredCustomer);
+
+        await harness.Service.AddVehicleAsync(currentUser, new CreateVehicleRequest
+        {
+            VehicleNumber = "ba 1 pa 1001",
+            Model = "Fit"
+        });
+
+        await harness.Service.AddVehicleAsync(currentUser, new CreateVehicleRequest
+        {
+            VehicleNumber = "ba 2 pa 2002",
+            Model = "Corolla"
+        });
+
+        IReadOnlyList<VehicleResponse> vehicles = await harness.Service.GetMyVehiclesAsync(currentUser);
+
+        Assert.Equal(2, vehicles.Count);
+        Assert.Contains(vehicles, vehicle => vehicle.VehicleNumber == "BA 1 PA 1001");
+        Assert.Contains(vehicles, vehicle => vehicle.VehicleNumber == "BA 2 PA 2002");
+    }
+
+    [Fact]
     public async Task CreateCustomerAsync_RejectsDuplicateVehicleNumber()
     {
         await using var harness = await TestHarness.CreateAsync();
@@ -156,6 +330,20 @@ public sealed class CustomerServiceTests
 
         AppValidationException exception = await Assert.ThrowsAsync<AppValidationException>(duplicateRequest);
         Assert.Equal("A vehicle with this number already exists.", exception.Message);
+    }
+
+    private static UserProfileResponse CreateCurrentUserProfile(RegisterCustomerResponse registeredCustomer)
+    {
+        return new UserProfileResponse
+        {
+            UserId = registeredCustomer.UserId,
+            CustomerId = registeredCustomer.CustomerId,
+            FullName = registeredCustomer.FullName,
+            Email = registeredCustomer.Email,
+            PhoneNumber = registeredCustomer.PhoneNumber,
+            Role = SystemRoles.Customer,
+            IsActive = true
+        };
     }
 
     private sealed class TestHarness(AppDbContext dbContext, CustomerService service) : IAsyncDisposable
