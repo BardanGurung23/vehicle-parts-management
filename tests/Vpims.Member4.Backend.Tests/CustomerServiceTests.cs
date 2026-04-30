@@ -332,6 +332,64 @@ public sealed class CustomerServiceTests
         Assert.Equal("A vehicle with this number already exists.", exception.Message);
     }
 
+    [Fact]
+    public async Task RegisterAsync_RejectsPhoneNumberThatNormalizesBelowMinimumLength()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        Task invalidRequest() => harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Invalid Phone Customer",
+            Email = "invalid.phone@autonix.local",
+            PhoneNumber = "phone-only",
+            Password = "DemoPass123!"
+        });
+
+        AppValidationException exception = await Assert.ThrowsAsync<AppValidationException>(invalidRequest);
+        Assert.Equal("Phone number must contain 7 to 20 digits, with an optional leading plus sign.", exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateCustomerAsync_RejectsVehicleNumberThatNormalizesToEmpty()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        Task invalidRequest() => harness.Service.CreateCustomerAsync(new CreateCustomerRequest
+        {
+            FullName = "Invalid Vehicle Customer",
+            PhoneNumber = "+9779805556666",
+            VehicleNumber = "   "
+        });
+
+        AppValidationException exception = await Assert.ThrowsAsync<AppValidationException>(invalidRequest);
+        Assert.Equal("Vehicle number must be between 2 and 30 characters.", exception.Message);
+    }
+
+    [Fact]
+    public async Task AddVehicleAsync_RejectsOverlongModel()
+    {
+        await using var harness = await TestHarness.CreateAsync();
+
+        RegisterCustomerResponse registeredCustomer = await harness.Service.RegisterAsync(new RegisterCustomerRequest
+        {
+            FullName = "Vehicle Model Customer",
+            Email = "vehicle.model@autonix.local",
+            PhoneNumber = "+9779805557777",
+            Password = "DemoPass123!"
+        });
+
+        UserProfileResponse currentUser = CreateCurrentUserProfile(registeredCustomer);
+
+        Task invalidRequest() => harness.Service.AddVehicleAsync(currentUser, new CreateVehicleRequest
+        {
+            VehicleNumber = "ba 6 pa 6006",
+            Model = new string('x', 81)
+        });
+
+        AppValidationException exception = await Assert.ThrowsAsync<AppValidationException>(invalidRequest);
+        Assert.Equal("Vehicle model is too long.", exception.Message);
+    }
+
     private static UserProfileResponse CreateCurrentUserProfile(RegisterCustomerResponse registeredCustomer)
     {
         return new UserProfileResponse

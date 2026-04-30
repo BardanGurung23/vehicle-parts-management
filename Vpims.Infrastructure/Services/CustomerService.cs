@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Customers;
@@ -14,13 +15,15 @@ public sealed class CustomerService(
     IRoleRepository roleRepository,
     PasswordHasher<User> passwordHasher) : ICustomerService
 {
+    private static readonly EmailAddressAttribute EmailAddressValidator = new();
+
     public async Task<RegisterCustomerResponse> RegisterAsync(RegisterCustomerRequest request, CancellationToken cancellationToken = default)
     {
-        string email = InputNormalizer.NormalizeEmail(request.Email);
-        string phoneNumber = InputNormalizer.NormalizePhoneNumber(request.PhoneNumber);
-        string fullName = InputNormalizer.NormalizeFullName(request.FullName);
+        string email = NormalizeRequiredEmail(request.Email);
+        string phoneNumber = NormalizeRequiredPhoneNumber(request.PhoneNumber);
+        string fullName = NormalizeRequiredFullName(request.FullName);
         string? vehicleNumber = NormalizeOptionalVehicleNumber(request.VehicleNumber);
-        string? vehicleModel = NormalizeOptionalValue(request.VehicleModel);
+        string? vehicleModel = NormalizeOptionalModel(request.VehicleModel);
 
         EnsureVehicleFields(vehicleNumber, vehicleModel);
 
@@ -58,11 +61,11 @@ public sealed class CustomerService(
 
     public async Task<CustomerDetailResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken = default)
     {
-        string fullName = InputNormalizer.NormalizeFullName(request.FullName);
-        string phoneNumber = InputNormalizer.NormalizePhoneNumber(request.PhoneNumber);
+        string fullName = NormalizeRequiredFullName(request.FullName);
+        string phoneNumber = NormalizeRequiredPhoneNumber(request.PhoneNumber);
         string? email = NormalizeOptionalEmail(request.Email);
-        string vehicleNumber = InputNormalizer.NormalizeVehicleNumber(request.VehicleNumber);
-        string? vehicleModel = NormalizeOptionalValue(request.VehicleModel);
+        string vehicleNumber = NormalizeRequiredVehicleNumber(request.VehicleNumber);
+        string? vehicleModel = NormalizeOptionalModel(request.VehicleModel);
 
         await EnsureUniqueCustomerIdentityAsync(email, phoneNumber, vehicleNumber, cancellationToken);
 
@@ -139,8 +142,8 @@ public sealed class CustomerService(
         Customer customer = await customerRepository.GetTrackedByUserIdAsync(currentUser.UserId, cancellationToken)
             ?? throw new NotFoundException("Customer profile not found.");
 
-        string fullName = InputNormalizer.NormalizeFullName(request.FullName);
-        string phoneNumber = InputNormalizer.NormalizePhoneNumber(request.PhoneNumber);
+        string fullName = NormalizeRequiredFullName(request.FullName);
+        string phoneNumber = NormalizeRequiredPhoneNumber(request.PhoneNumber);
         string email = NormalizeOptionalEmail(request.Email) ?? customer.Email ?? customer.User?.Email
             ?? throw new AppValidationException("Customer email is required.");
         string? address = NormalizeOptionalValue(request.Address);
@@ -238,9 +241,19 @@ public sealed class CustomerService(
 
     private static string? NormalizeOptionalEmail(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : InputNormalizer.NormalizeEmail(value);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        string email = InputNormalizer.NormalizeEmail(value);
+
+        if (email.Length > 150 || !EmailAddressValidator.IsValid(email))
+        {
+            throw new AppValidationException("Enter a valid email address.");
+        }
+
+        return email;
     }
 
     private static string? NormalizeOptionalName(string? value)
@@ -254,7 +267,7 @@ public sealed class CustomerService(
     {
         return string.IsNullOrWhiteSpace(value)
             ? null
-            : InputNormalizer.NormalizePhoneNumber(value);
+            : NormalizeRequiredPhoneNumber(value);
     }
 
     private static string? NormalizeOptionalValue(string? value)
@@ -266,9 +279,67 @@ public sealed class CustomerService(
 
     private static string? NormalizeOptionalVehicleNumber(string? value)
     {
-        return string.IsNullOrWhiteSpace(value)
-            ? null
-            : InputNormalizer.NormalizeVehicleNumber(value);
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        return NormalizeRequiredVehicleNumber(value);
+    }
+
+    private static string NormalizeRequiredFullName(string value)
+    {
+        string fullName = InputNormalizer.NormalizeFullName(value);
+
+        if (fullName.Length < 3 || fullName.Length > 150)
+        {
+            throw new AppValidationException("Full name must be between 3 and 150 characters.");
+        }
+
+        return fullName;
+    }
+
+    private static string NormalizeRequiredEmail(string value)
+    {
+        string? email = NormalizeOptionalEmail(value);
+        return email ?? throw new AppValidationException("Email is required.");
+    }
+
+    private static string NormalizeRequiredPhoneNumber(string value)
+    {
+        string phoneNumber = InputNormalizer.NormalizePhoneNumber(value);
+        int digitCount = phoneNumber.Count(char.IsDigit);
+
+        if (digitCount < 7 || phoneNumber.Length > 20)
+        {
+            throw new AppValidationException("Phone number must contain 7 to 20 digits, with an optional leading plus sign.");
+        }
+
+        return phoneNumber;
+    }
+
+    private static string NormalizeRequiredVehicleNumber(string value)
+    {
+        string vehicleNumber = InputNormalizer.NormalizeVehicleNumber(value);
+
+        if (vehicleNumber.Length < 2 || vehicleNumber.Length > 30)
+        {
+            throw new AppValidationException("Vehicle number must be between 2 and 30 characters.");
+        }
+
+        return vehicleNumber;
+    }
+
+    private static string? NormalizeOptionalModel(string? value)
+    {
+        string? model = NormalizeOptionalValue(value);
+
+        if (model?.Length > 80)
+        {
+            throw new AppValidationException("Vehicle model is too long.");
+        }
+
+        return model;
     }
 
     public async Task<VehicleResponse> AddVehicleAsync(
@@ -279,7 +350,7 @@ public sealed class CustomerService(
         Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
             ?? throw new NotFoundException("Customer profile not found.");
 
-        string vehicleNumber = InputNormalizer.NormalizeVehicleNumber(request.VehicleNumber);
+        string vehicleNumber = NormalizeRequiredVehicleNumber(request.VehicleNumber);
 
         if (await customerRepository.ExistsByVehicleNumberAsync(vehicleNumber, cancellationToken))
         {
@@ -289,7 +360,7 @@ public sealed class CustomerService(
         var vehicle = new Vehicle
         {
             VehicleNumber = vehicleNumber,
-            Model = NormalizeOptionalValue(request.Model),
+            Model = NormalizeOptionalModel(request.Model),
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -309,7 +380,7 @@ public sealed class CustomerService(
         Vehicle vehicle = customer.Vehicles.FirstOrDefault(item => item.VehicleId == vehicleId)
             ?? throw new NotFoundException($"Vehicle with id {vehicleId} not found.");
 
-        string vehicleNumber = InputNormalizer.NormalizeVehicleNumber(request.VehicleNumber);
+        string vehicleNumber = NormalizeRequiredVehicleNumber(request.VehicleNumber);
 
         if (!string.Equals(vehicle.VehicleNumber, vehicleNumber, StringComparison.Ordinal)
             && await customerRepository.ExistsByVehicleNumberAsync(vehicleNumber, cancellationToken))
@@ -318,7 +389,7 @@ public sealed class CustomerService(
         }
 
         vehicle.VehicleNumber = vehicleNumber;
-        vehicle.Model = NormalizeOptionalValue(request.Model);
+        vehicle.Model = NormalizeOptionalModel(request.Model);
 
         Vehicle updatedVehicle = await customerRepository.UpdateVehicleAsync(vehicle, cancellationToken);
         return UserMapper.ToVehicleResponse(updatedVehicle);
