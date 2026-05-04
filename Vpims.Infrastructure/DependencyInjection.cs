@@ -6,6 +6,7 @@ using Vpims.Application.Common;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Domain.Entities;
+using Vpims.Infrastructure.BackgroundServices;
 using Vpims.Infrastructure.Persistence;
 using Vpims.Infrastructure.Repositories;
 using Vpims.Infrastructure.Security;
@@ -18,6 +19,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.Configure<NotificationSettings>(configuration.GetSection(NotificationSettings.SectionName));
 
         string connectionString = configuration.GetConnectionString("defaultConnection")
             ?? throw new InvalidOperationException("Connection string 'defaultConnection' is missing.");
@@ -31,11 +34,17 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IPartRepository, PartRepository>();
+        services.AddScoped<INotificationRepository, NotificationRepository>();
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IStaffManagementService, StaffManagementService>();
         services.AddScoped<IPartService, PartService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
+
+        // Background notification services
+        services.AddHostedService<LowStockNotificationService>();
+        services.AddHostedService<UnpaidInvoiceReminderService>();
 
         return services;
     }

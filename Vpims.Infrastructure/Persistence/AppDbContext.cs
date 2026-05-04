@@ -18,6 +18,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<Part> Parts => Set<Part>();
 
+    public DbSet<SalesInvoice> SalesInvoices => Set<SalesInvoice>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
@@ -26,5 +28,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.ApplyConfiguration(new VehicleConfiguration());
         modelBuilder.ApplyConfiguration(new PartCategoryConfiguration());
         modelBuilder.ApplyConfiguration(new PartConfiguration());
+        modelBuilder.ApplyConfiguration(new SalesInvoiceConfiguration());
     }
 }
