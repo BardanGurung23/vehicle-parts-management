@@ -1,4 +1,3 @@
-using Vpims.Application.Common;
 using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Sales;

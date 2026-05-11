@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Sales &amp; Invoicing</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #eef2f6;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --border: #d6dde6;
+            --text: #1f2933;
+            --muted: #52606d;
+            --primary: #155e75;
+            --primary-soft: #d9f1f7;
+            --success: #166534;
+            --success-bg: #dcfce7;
+            --danger: #b91c1c;
+            --danger-bg: #fee2e2;
+            --shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top right, rgba(21, 94, 117, 0.12), transparent 24%),
+                linear-gradient(180deg, #f9fbfd 0%, var(--bg) 100%);
+            min-height: 100vh;
+        }
+
+        .page {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+        }
+
+        .hero {
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(1.9rem, 4vw, 3rem);
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            max-width: 700px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: 1.25rem;
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input, select, button {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            font: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: 2px solid rgba(21, 94, 117, 0.25);
+            border-color: var(--primary);
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+        }
+
+        .primary {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 12px 24px rgba(21, 94, 117, 0.2);
+        }
+
+        .secondary {
+            background: var(--surface-alt);
+            color: var(--text);
+        }
+
+        .secondary:disabled,
+        .primary:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .part-row {
+            display: grid;
+            grid-template-columns: 2fr 120px 52px;
+            gap: 12px;
+            align-items: end;
+            margin-bottom: 12px;
+        }
+
+        .remove-btn {
+            background: #fff1f2;
+            color: var(--danger);
+            border-color: #fecdd3;
+            padding: 12px 8px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .actions button {
+            flex: 1 1 220px;
+        }
+
+        .summary {
+            display: grid;
+            gap: 12px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: var(--surface-alt);
+        }
+
+        .summary-row strong {
+            font-size: 1.1rem;
+        }
+
+        .invoice-meta {
+            margin-top: 18px;
+            padding: 16px;
+            border-radius: 16px;
+            background: var(--primary-soft);
+            display: none;
+        }
+
+        .line-items {
+            margin-top: 18px;
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+        }
+
+        .line-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .message {
+            display: none;
+            margin-bottom: 16px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            font-weight: 600;
+        }
+
+        .message.success {
+            display: block;
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .message.error {
+            display: block;
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 680px) {
+            .page {
+                padding: 24px 14px 40px;
+            }
+
+            .card {
+                padding: 18px;
+                border-radius: 16px;
+            }
+
+            .part-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="page">
+    <section class="hero">
+        <h1>Staff Sales &amp; Invoicing</h1>
+        <p>Create a vehicle parts sale, calculate the loyalty discount automatically, and email the invoice to the customer.</p>
+    </section>
+
+    <div id="message" class="message"></div>
+
+    <section class="grid">
+        <div class="card">
+            <h2>New Sale</h2>
+
+            <div class="field">
+                <label for="customerSearch">Search Customer</label>
+                <input id="customerSearch" type="text" placeholder="Search by name or email">
+            </div>
+
+            <div class="field">
+                <label for="customerSelect">Select Customer</label>
+                <select id="customerSelect">
+                    <option value="">Choose a customer</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="partSearch">Search Vehicle Parts</label>
+                <input id="partSearch" type="text" placeholder="Search by name or part number">
+            </div>
+
+            <div id="partRows"></div>
+
+            <button id="addPartButton" type="button" class="secondary">Add Part Row</button>
+
+            <div class="actions">
+                <button id="createInvoiceButton" type="button" class="primary">Create Invoice</button>
+                <button id="sendEmailButton" type="button" class="secondary" disabled>Send Invoice Email</button>
+            </div>
+        </div>
+
+        <aside class="card">
+            <h2>Invoice Summary</h2>
+            <p class="hint">A 10% loyalty discount is applied automatically when the subtotal is more than 5000.</p>
+
+            <div class="summary">
+                <div class="summary-row"><span>Subtotal</span><strong id="subtotalValue">0.00</strong></div>
+                <div class="summary-row"><span>Discount</span><strong id="discountValue">0.00</strong></div>
+                <div class="summary-row"><span>Final Total</span><strong id="finalTotalValue">0.00</strong></div>
+            </div>
+
+            <div id="invoiceMeta" class="invoice-meta">
+                <div><strong>Invoice Number:</strong> <span id="invoiceNumberValue">-</span></div>
+                <div><strong>Customer Email:</strong> <span id="customerEmailValue">-</span></div>
+                <div><strong>Created:</strong> <span id="invoiceDateValue">-</span></div>
+            </div>
+
+            <div class="line-items">
+                <h2>Line Items</h2>
+                <div id="lineItemsContainer" class="hint">No invoice created yet.</div>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<script>
+    const apiBase = "/api/staff-sales";
+    const customerSearchInput = document.getElementById("customerSearch");
+    const customerSelect = document.getElementById("customerSelect");
+    const partSearchInput = document.getElementById("partSearch");
+    const partRowsContainer = document.getElementById("partRows");
+    const addPartButton = document.getElementById("addPartButton");
+    const createInvoiceButton = document.getElementById("createInvoiceButton");
+    const sendEmailButton = document.getElementById("sendEmailButton");
+    const messageBox = document.getElementById("message");
+    const subtotalValue = document.getElementById("subtotalValue");
+    const discountValue = document.getElementById("discountValue");
+    const finalTotalValue = document.getElementById("finalTotalValue");
+    const invoiceMeta = document.getElementById("invoiceMeta");
+    const invoiceNumberValue = document.getElementById("invoiceNumberValue");
+    const customerEmailValue = document.getElementById("customerEmailValue");
+    const invoiceDateValue = document.getElementById("invoiceDateValue");
+    const lineItemsContainer = document.getElementById("lineItemsContainer");
+
+    let currentInvoice = null;
+    let customers = [];
+    let parts = [];
+
+    function showMessage(text, type) {
+        messageBox.textContent = text;
+        messageBox.className = `message ${type}`;
+    }
+
+    function clearMessage() {
+        messageBox.textContent = "";
+        messageBox.className = "message";
+    }
+
+    function formatCurrency(value) {
+        return Number(value || 0).toFixed(2);
+    }
+
+    function debounce(fn, wait) {
+        let timeoutId;
+        return (...args) => {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => fn(...args), wait);
+        };
+    }
+
+    function updateCustomerOptions() {
+        const selectedValue = customerSelect.value;
+        customerSelect.innerHTML = '<option value="">Choose a customer</option>';
+
+        customers.forEach((customer) => {
+            const option = document.createElement("option");
+            option.value = customer.id;
+            option.textContent = `${customer.fullName} (${customer.email})`;
+            customerSelect.appendChild(option);
+        });
+
+        if ([...customerSelect.options].some((option) => option.value === selectedValue)) {
+            customerSelect.value = selectedValue;
+        }
+    }
+
+    function buildPartOptions(selectedPartId = "") {
+        const options = ['<option value="">Choose a part</option>'];
+        parts.forEach((part) => {
+            const selected = part.id === selectedPartId ? "selected" : "";
+            options.push(`<option value="${part.id}" ${selected}>${part.name} (${part.partNumber}) - Rs. ${formatCurrency(part.unitPrice)} | Stock: ${part.stockQuantity}</option>`);
+        });
+        return options.join("");
+    }
+
+    function renderPartRows() {
+        const rows = [...partRowsContainer.querySelectorAll(".part-row")];
+        rows.forEach((row) => {
+            const select = row.querySelector("select");
+            const selectedValue = select.value;
+            select.innerHTML = buildPartOptions(selectedValue);
+        });
+        updateDraftSummary();
+    }
+
+    function addPartRow() {
+        const row = document.createElement("div");
+        row.className = "part-row";
+        row.innerHTML = `
+            <div class="field">
+                <label>Vehicle Part</label>
+                <select>${buildPartOptions()}</select>
+            </div>
+            <div class="field">
+                <label>Quantity</label>
+                <input type="number" min="1" value="1">
+            </div>
+            <button type="button" class="remove-btn">X</button>
+        `;
+
+        row.querySelector("select").addEventListener("change", updateDraftSummary);
+        row.querySelector("input").addEventListener("input", updateDraftSummary);
+        row.querySelector(".remove-btn").addEventListener("click", () => {
+            row.remove();
+            updateDraftSummary();
+        });
+
+        partRowsContainer.appendChild(row);
+        updateDraftSummary();
+    }
+
+    function getDraftItems() {
+        return [...partRowsContainer.querySelectorAll(".part-row")]
+            .map((row) => {
+                const partId = row.querySelector("select").value;
+                const quantity = Number(row.querySelector("input").value || 0);
+                const part = parts.find((entry) => entry.id === partId);
+                return { partId, quantity, part };
+            })
+            .filter((item) => item.partId && item.quantity > 0 && item.part);
+    }
+
+    function updateDraftSummary() {
+        const items = getDraftItems();
+        const subtotal = items.reduce((sum, item) => sum + (item.part.unitPrice * item.quantity), 0);
+        const discount = subtotal > 5000 ? subtotal * 0.1 : 0;
+        const finalTotal = subtotal - discount;
+
+        subtotalValue.textContent = formatCurrency(subtotal);
+        discountValue.textContent = formatCurrency(discount);
+        finalTotalValue.textContent = formatCurrency(finalTotal);
+    }
+
+    function renderInvoice(invoice) {
+        currentInvoice = invoice;
+        subtotalValue.textContent = formatCurrency(invoice.subtotal);
+        discountValue.textContent = formatCurrency(invoice.discountAmount);
+        finalTotalValue.textContent = formatCurrency(invoice.finalTotal);
+        invoiceMeta.style.display = "block";
+        invoiceNumberValue.textContent = invoice.invoiceNumber;
+        customerEmailValue.textContent = invoice.customerEmail;
+        invoiceDateValue.textContent = new Date(invoice.createdAtUtc).toLocaleString();
+        sendEmailButton.disabled = false;
+
+        lineItemsContainer.innerHTML = "";
+        invoice.items.forEach((item) => {
+            const line = document.createElement("div");
+            line.className = "line-item";
+            line.innerHTML = `<div>${item.partName} (${item.partNumber}) x ${item.quantity}</div><strong>Rs. ${formatCurrency(item.lineTotal)}</strong>`;
+            lineItemsContainer.appendChild(line);
+        });
+    }
+
+    async function fetchJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const contentType = response.headers.get("content-type") || "";
+        const payload = contentType.includes("application/json") ? await response.json() : null;
+
+        if (!response.ok) {
+            throw new Error(payload?.message || "Request failed.");
+        }
+
+        return payload;
+    }
+
+    async function loadCustomers(search = "") {
+        customers = await fetchJson(`${apiBase}/customers?search=${encodeURIComponent(search)}`);
+        updateCustomerOptions();
+    }
+
+    async function loadParts(search = "") {
+        parts = await fetchJson(`${apiBase}/parts?search=${encodeURIComponent(search)}`);
+        renderPartRows();
+    }
+
+    async function createInvoice() {
+        clearMessage();
+
+        const customerId = customerSelect.value;
+        const items = getDraftItems().map((item) => ({
+            partId: item.partId,
+            quantity: item.quantity
+        }));
+
+        if (!customerId) {
+            showMessage("Please select a customer before creating an invoice.", "error");
+            return;
+        }
+
+        if (items.length === 0) {
+            showMessage("Please add at least one vehicle part.", "error");
+            return;
+        }
+
+        createInvoiceButton.disabled = true;
+
+        try {
+            const invoice = await fetchJson(`${apiBase}/invoices`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ customerId, items })
+            });
+
+            renderInvoice(invoice);
+            showMessage("Invoice created successfully.", "success");
+        } catch (error) {
+            showMessage(error.message, "error");
+        } finally {
+            createInvoiceButton.disabled = false;
+        }
+    }
+
+    async function sendInvoiceEmail() {
+        if (!currentInvoice) {
+            showMessage("Create an invoice before sending email.", "error");
+            return;
+        }
+
+        sendEmailButton.disabled = true;
+
+        try {
+            const response = await fetchJson(`${apiBase}/invoices/${currentInvoice.saleId}/send-email`, {
+                method: "POST"
+            });
+
+            showMessage(response.message, "success");
+        } catch (error) {
+            showMessage(error.message, "error");
+        } finally {
+            sendEmailButton.disabled = false;
+        }
+    }
+
+    customerSearchInput.addEventListener("input", debounce((event) => {
+        loadCustomers(event.target.value).catch((error) => showMessage(error.message, "error"));
+    }, 250));
+
+    partSearchInput.addEventListener("input", debounce((event) => {
+        loadParts(event.target.value).catch((error) => showMessage(error.message, "error"));
+    }, 250));
+
+    addPartButton.addEventListener("click", addPartRow);
+    createInvoiceButton.addEventListener("click", createInvoice);
+    sendEmailButton.addEventListener("click", sendInvoiceEmail);
+
+    (async function initialize() {
+        addPartRow();
+
+        try {
+            await Promise.all([loadCustomers(), loadParts()]);
+        } catch (error) {
+            showMessage(error.message, "error");
+        }
+    })();
+</script>
+</body>
+</html>
