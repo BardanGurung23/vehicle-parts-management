@@ -83,53 +83,56 @@ public sealed class DatabaseInitializer(
             await connection.OpenAsync(cancellationToken);
         }
 
-        bool hasUserTables = await CountAsync(connection,
-            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name <> '__EFMigrationsHistory';",
-            cancellationToken) > 0;
-
-        if (!hasUserTables)
+        try
         {
-            return false;
-        }
+            bool hasUserTables = await CountAsync(connection,
+                "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name <> '__EFMigrationsHistory';",
+                cancellationToken) > 0;
 
-        foreach (string table in RequiredTables)
-        {
-            if (!await TableExistsAsync(connection, table, cancellationToken))
+            if (!hasUserTables)
+            {
+                return false;
+            }
+
+            foreach (string table in RequiredTables)
+            {
+                if (!await TableExistsAsync(connection, table, cancellationToken))
+                {
+                    return true;
+                }
+            }
+
+            if (!await ColumnExistsAsync(connection, "parts", "vendor_id", cancellationToken))
             {
                 return true;
             }
-        }
 
-        if (!await ColumnExistsAsync(connection, "parts", "vendor_id", cancellationToken))
+            if (await TableExistsAsync(connection, "reviews", cancellationToken)
+                || await TableExistsAsync(connection, "sales", cancellationToken)
+                || await TableExistsAsync(connection, "sale_items", cancellationToken))
+            {
+                return true;
+            }
+
+            bool historyExists = await TableExistsAsync(connection, "__EFMigrationsHistory", cancellationToken);
+            if (!historyExists)
+            {
+                return true;
+            }
+
+            HashSet<string> knownMigrations = dbContext.Database.GetMigrations().ToHashSet(StringComparer.OrdinalIgnoreCase);
+            HashSet<string> appliedMigrations = await GetAppliedMigrationIdsAsync(connection, cancellationToken);
+
+            return appliedMigrations.Count == 0
+                || appliedMigrations.Any(migrationId => !knownMigrations.Contains(migrationId));
+        }
+        finally
         {
-            return true;
+            if (shouldCloseConnection)
+            {
+                await connection.CloseAsync();
+            }
         }
-
-        if (await TableExistsAsync(connection, "reviews", cancellationToken)
-            || await TableExistsAsync(connection, "sales", cancellationToken)
-            || await TableExistsAsync(connection, "sale_items", cancellationToken))
-        {
-            return true;
-        }
-
-        bool historyExists = await TableExistsAsync(connection, "__EFMigrationsHistory", cancellationToken);
-        if (!historyExists)
-        {
-            return true;
-        }
-
-        HashSet<string> knownMigrations = dbContext.Database.GetMigrations().ToHashSet(StringComparer.OrdinalIgnoreCase);
-        HashSet<string> appliedMigrations = await GetAppliedMigrationIdsAsync(connection, cancellationToken);
-
-        bool requiresReset = appliedMigrations.Count == 0
-            || appliedMigrations.Any(migrationId => !knownMigrations.Contains(migrationId));
-
-        if (shouldCloseConnection)
-        {
-            await connection.CloseAsync();
-        }
-
-        return requiresReset;
     }
 
     private async Task EnsureDatabaseExistsAsync(CancellationToken cancellationToken)
