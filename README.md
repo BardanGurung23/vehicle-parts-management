@@ -59,10 +59,10 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Staff admin | `GET /api/admin/staff`, `POST /api/admin/staff`, `GET /api/admin/staff/roles`, `PUT /api/admin/staff/{userId}/role` |
 | Dashboard | `GET /api/dashboard/summary` |
 | Parts | List, detail, create, update, and delete endpoints under `/api/parts` |
-| Vendors | CRUD endpoints under `/api/vendors` |
+| Vendors | CRUD endpoints under `/api/admin/vendors` |
 | Appointments | Customer and admin flows under `/api/appointments` |
 | Sales | Customer and employee-assisted flows under `/api/sales` |
-| Part requests | Customer and admin flows under `/api/partrequests` |
+| Part requests | Customer and admin flows under `/api/part-requests` |
 | Reviews | Customer review flows under `/api/reviews` |
 
 ## 👥 Backend Feature Coverage
@@ -138,7 +138,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Shop and purchase-history routes with employee-assisted checkout | ✅ |
 | Active parts page uses the direct feature API client | ✅ |
 | Staff read-only parts access with admin-only mutations | ✅ |
-| Legacy inactive frontend code still exists | ⏳ |
+| Legacy inactive frontend code still exists, but inactive feature-level Redux pages have started to be removed | ⏳ |
 | Frontend automated tests | ✅ |
 
 ### 🧪 Verification Mirror
@@ -147,16 +147,16 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | --- | --- |
 | `dotnet build backend/vpims-backend.sln` | ✅ Passes |
 | `bash tests/run-backend-tests.sh` | ✅ Passes |
-| `dotnet test backend/tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 17/17 tests |
+| `dotnet test tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 29/29 tests |
 | `dotnet run --project backend/Vpims.API --configuration Debug` | 🟡 Applies migration and seed path; this review hit a local port conflict before re-confirming a fresh listening state |
 | `npm --prefix frontend/admin run build` | ✅ Passes |
-| Latest documented browser smoke checks for admin login, dashboard, customer detail, parts workspace | ✅ Passes |
-| Latest documented live browser retests for booking, vehicles refresh, totals display, vendors/appointments shell copy, appointments action visibility | ✅ Passes |
-| `pnpm --dir frontend/admin test:run` | ✅ Passes with the committed Vitest suite |
+| `npm --prefix frontend/admin run lint` | ✅ Passes |
+| `npm --prefix frontend/admin run test:run` | ✅ Passes with 3/3 tests |
+| Latest documented browser smoke checks for admin login, dashboard alerts, customer reports, financial reports, purchase invoices, and customer detail history | ✅ Passes |
 
 ## ✉️ SMTP Configuration
 
-Both invoice emails and automated alert emails use the `InvoiceEmail` section in `backend/Vpims.API/appsettings.json` or environment overrides.
+Both invoice emails and automated alert emails use the `InvoiceEmail` section in `backend/Vpims.API/appsettings.json`, environment variables, or .NET user secrets.
 
 Required settings:
 
@@ -168,7 +168,21 @@ Required settings:
 - `InvoiceEmail__FromName`
 - `InvoiceEmail__EnableSsl`
 
+Example .NET user-secret setup:
+
+```bash
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:Host" "smtp.mailhost.local"
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:Port" "587"
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:Username" "mailer-user"
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:Password" "<secret>"
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:FromEmail" "noreply@autonix.local"
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:FromName" "Autonix"
+dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:EnableSsl" "true"
+```
+
 Default repository values are placeholders only. Local development keeps alert generation running even when SMTP is intentionally unset, but live invoice or alert delivery will not work until real mail-server values are supplied.
+
+With placeholder values, `SmtpEmailService` rejects delivery with a validation error stating that invoice email settings are incomplete. If the SMTP server accepts a connection but rejects delivery, the service returns a validation error asking the operator to verify the `InvoiceEmail` configuration.
 
 ## 👨‍👩‍👧‍👦 Member Assignment Tracking
 
@@ -257,11 +271,11 @@ Use Git Bash or WSL for the `bash` commands on Windows.
 | Priority item | Status |
 | --- | --- |
 | Commit a repeatable database migration workflow | ✅ |
-| Add broader regression coverage for appointment UTC persistence and customer self-service vehicle flows | ⏳ |
-| Decide whether remaining active flows on older Redux services should move to the newer feature API layer | ⏳ |
+| Add broader regression coverage for appointment UTC persistence and customer self-service vehicle flows | ✅ |
+| Decide whether remaining active flows on older Redux services should move to the newer feature API layer | 🟡 Active feature routes have been migrated; some legacy admin pages mounted through the router still use Redux services |
 | Complete live SMTP verification for invoice and alert emails | ⏳ |
-| Expand employee-facing customer history views and related reports | ⏳ |
-| Clean up or retire inactive legacy frontend code | ⏳ |
+| Expand employee-facing customer history views and related reports | ✅ |
+| Clean up or retire inactive legacy frontend code | 🟡 Started; clearly inactive files removed and remaining legacy admin pages still need phased cleanup |
 
 ## ⚠️ Important Note
 
