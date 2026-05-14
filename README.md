@@ -92,7 +92,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | PRD aligned with Clean Architecture exists in `doc/prd.md` | ✅ |
 | Supporting architecture, ERD, style guide, question tracking, and reporting docs exist in `doc/` | ✅ |
 | Clean Architecture boundaries are reflected in code | ✅ |
-| Progress roadmap refreshed against latest browser validation on 2026-04-29 and focused Member 4 verification on 2026-04-30 | ✅ |
+| Progress roadmap refreshed against the current codebase, the latest browser validation on 2026-04-29, the focused Member 4 verification refresh on 2026-04-30, the Member 1 finance/vendor implementation refresh on 2026-05-04, and the Member 3 backend verification/startup refresh on 2026-05-14 | ✅ |
 
 ### ⚙️ Backend Status Mirror
 
@@ -178,7 +178,7 @@ Default repository values are placeholders only. Local development keeps alert g
 | Sneha Ssapkota | Staff & Inventory (`Feature 2`, `Feature 3`, `Feature 15`) | ✅ Feature 2, 🟡 Feature 3, ⏳ Feature 15 |
 | Krijal Maharjan | Sales & Invoicing (`Feature 7`, `Feature 11`, `Feature 16`) | ✅ Feature 7, ✅ Feature 16, ⏳ Feature 11 |
 | Paurakh Pyakurel | Registration & Search (`Feature 6`, `Feature 12`, `Feature 10`) | ✅ All assigned features implemented |
-| Bardan Gurung | Customer Portal & History (`Feature 8`, `Feature 9`, `Feature 13`, `Feature 14`) | 🟡 Feature 8, ⏳ Feature 9, ✅ Feature 13, ✅ Feature 14 |
+| Bardan Gurung | Customer Portal & History (`Feature 8`, `Feature 9`, `Feature 13`, `Feature 14`) | ✅ Feature 8, ⏳ Feature 9, ✅ Feature 13, ✅ Feature 14 |
 
 ## 🚚 Latest Delivered Slice
 
