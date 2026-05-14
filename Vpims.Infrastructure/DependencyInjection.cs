@@ -33,7 +33,9 @@ public static class DependencyInjection
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<ICustomerReportRepository, CustomerReportRepository>();
         services.AddScoped<IFinancialReportRepository, FinancialReportRepository>();
+        services.AddScoped<IPredictiveAlertRepository, PredictiveAlertRepository>();
         services.AddScoped<IPartRepository, PartRepository>();
         services.AddScoped<IAppointmentRepository, AppointmentRepository>();
         services.AddScoped<IPartRequestRepository, PartRequestRepository>();
@@ -45,6 +47,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<ICustomerReportService, CustomerReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IFinancialReportService, FinancialReportService>();
         services.AddScoped<IStaffManagementService, StaffManagementService>();

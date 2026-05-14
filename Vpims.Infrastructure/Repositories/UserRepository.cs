@@ -51,6 +51,16 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<User>> GetUsersByRoleAsync(string roleName, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Users
+            .AsNoTracking()
+            .Include(user => user.Role)
+            .Where(user => user.Role != null && user.Role.Name == roleName)
+            .OrderBy(user => user.FullName)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<User> UpdateRoleAsync(User user, int roleId, CancellationToken cancellationToken = default)
     {
         user.RoleId = roleId;

@@ -17,6 +17,10 @@ public sealed class CreateSaleRequest
 
     public int? VehicleId { get; set; }
 
+    public string? PaymentStatus { get; set; }
+
+    public DateTimeOffset? DueDate { get; set; }
+
     [MinLength(1)]
     public List<CreateSaleItemRequest> Items { get; set; } = new();
 

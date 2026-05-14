@@ -46,9 +46,21 @@ public sealed class AppointmentRepository(AppDbContext dbContext) : IAppointment
 
     public async Task<Appointment> UpdateAsync(Appointment appointment, CancellationToken cancellationToken = default)
     {
-        dbContext.Appointments.Update(appointment);
+        Appointment? trackedAppointment = dbContext.Appointments.Local
+            .FirstOrDefault(existing => existing.AppointmentId == appointment.AppointmentId);
+
+        if (trackedAppointment is not null)
+        {
+            dbContext.Entry(trackedAppointment).CurrentValues.SetValues(appointment);
+        }
+        else
+        {
+            dbContext.Appointments.Update(appointment);
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
-        return appointment;
+
+        return trackedAppointment ?? appointment;
     }
 
     public async Task<bool> ExistsAsync(int appointmentId, CancellationToken cancellationToken = default)

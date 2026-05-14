@@ -12,6 +12,13 @@ public sealed class SalesService(
     ICustomerRepository customerRepository,
     IPartRepository partRepository) : ISaleService
 {
+    private static readonly HashSet<string> AllowedPaymentStatuses = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Paid",
+        "Pending",
+        "Credit",
+    };
+
     public async Task<IReadOnlyList<SaleResponse>> GetCustomerSalesAsync(
         UserProfileResponse currentUser,
         CancellationToken cancellationToken = default)
@@ -104,6 +111,8 @@ public sealed class SalesService(
         decimal discountAmount = subtotal > 5000m ? Math.Round(subtotal * 0.10m, 2, MidpointRounding.AwayFromZero) : 0m;
         decimal totalAmount = subtotal - discountAmount;
         DateTimeOffset saleDate = DateTimeOffset.UtcNow;
+        string paymentStatus = ResolvePaymentStatus(request.PaymentStatus);
+        DateTimeOffset? dueDate = ResolveDueDate(paymentStatus, request.DueDate);
 
         var sale = new Sale
         {
@@ -114,7 +123,8 @@ public sealed class SalesService(
             Subtotal = subtotal,
             DiscountAmount = discountAmount,
             TotalAmount = totalAmount,
-            PaymentStatus = "Paid",
+            PaymentStatus = paymentStatus,
+            DueDate = dueDate,
             Notes = request.Notes,
             SaleDate = saleDate,
             Items = saleItems,
@@ -196,5 +206,34 @@ public sealed class SalesService(
     private static string BuildInvoiceNumber(DateTimeOffset saleDate)
     {
         return $"SAL-{saleDate:yyyyMMddHHmmssfff}";
+    }
+
+    private static string ResolvePaymentStatus(string? paymentStatus)
+    {
+        string resolvedStatus = string.IsNullOrWhiteSpace(paymentStatus)
+            ? "Paid"
+            : paymentStatus.Trim();
+
+        if (!AllowedPaymentStatuses.Contains(resolvedStatus))
+        {
+            throw new AppValidationException("Payment status must be Paid, Pending, or Credit.");
+        }
+
+        return resolvedStatus;
+    }
+
+    private static DateTimeOffset? ResolveDueDate(string paymentStatus, DateTimeOffset? dueDate)
+    {
+        if (string.Equals(paymentStatus, "Paid", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        if (!dueDate.HasValue)
+        {
+            throw new AppValidationException("A due date is required for pending or credit sales.");
+        }
+
+        return dueDate.Value.ToUniversalTime();
     }
 }

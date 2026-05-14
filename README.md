@@ -24,8 +24,8 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Vendors | ✅ Implemented | Vendor CRUD is available for admin users |
 | Appointments | ✅ Implemented | Customer booking and admin status management are live |
 | Sales | ✅ Implemented | Sales invoices, totals, and loyalty discount are live |
-| Purchase invoices | 🟡 Partial | Persistence and seeded demo data exist, but the full product workflow is still pending |
-| Notifications/reports | ⏳ Pending | Financial reports and automated alerts are still open |
+| Purchase invoices | ✅ Implemented | Admin purchase-invoice creation and recent-invoice listing are live |
+| Notifications/reports | ✅ Implemented | Financial reports, customer reports, and automated alerts are in place |
 
 ## 🏗️ Solution Structure
 
@@ -77,8 +77,9 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Feature 13: Customer requests/reviews/appointments | ✅ Implemented | Booking, part requests, and reviews are supported |
 | Feature 14: Purchase and service history | ✅ Implemented | Purchase history and appointment history endpoints are live |
 | Feature 16: Loyalty discount | ✅ Implemented | 10% discount is applied to qualifying purchases |
-| Feature 4: Purchase invoices | 🟡 Partial | Domain/persistence support and seeded demo data exist, but the full workflow remains incomplete |
-| Feature 1 / 9 / 11 / 15 | ⏳ Pending | Reporting, invoice email, and notification workflows are still open |
+| Feature 4: Purchase invoices | ✅ Implemented | Admin users can create and review purchase invoices |
+| Feature 1 / 9 / 15 | ✅ Implemented | Financial reports, customer reports, and automated notification workflows are live |
+| Feature 11 | 🟡 Partial | Invoice and alert email code paths are implemented, but live delivery still needs real SMTP credentials |
 
 ## 📈 Project Progress Snapshot
 
@@ -113,7 +114,8 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Local browser testing allowed by current CORS configuration | ✅ |
 | Member 4 backend milestone | ✅ |
 | EF persistence for users, roles, customers, vehicles, parts, vendors, appointments, part requests, service reviews, sales invoices, purchase invoices, and predictive alerts | ✅ |
-| Purchase-invoice and predictive-alert workflow delivery | 🟡 Schema/demo-data coverage exists, but active API/UI and automated alert delivery are still pending |
+| Purchase-invoice workflow delivery | ✅ Active API and frontend workflow are implemented |
+| Predictive-alert and reminder delivery | 🟡 Hosted workflow and best-effort email delivery are implemented, but live SMTP verification is still pending |
 | Admin/bootstrap/demo tooling | ✅ |
 | Focused backend test project under `tests/` | ✅ |
 | `Vpims.CleanupDemoDataset` aligned with final EF schema | ✅ |
@@ -134,10 +136,10 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | Customer appointment routes | ✅ |
 | Customer part-request and review routes | ✅ |
 | Shop and purchase-history routes with employee-assisted checkout | ✅ |
-| Active parts page still depends on older Redux service layer | 🟡 |
+| Active parts page uses the direct feature API client | ✅ |
 | Staff read-only parts access with admin-only mutations | ✅ |
 | Legacy inactive frontend code still exists | ⏳ |
-| Frontend automated tests | ⏳ |
+| Frontend automated tests | ✅ |
 
 ### 🧪 Verification Mirror
 
@@ -145,12 +147,28 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | --- | --- |
 | `dotnet build backend/vpims-backend.sln` | ✅ Passes |
 | `bash tests/run-backend-tests.sh` | ✅ Passes |
-| `dotnet test backend/tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 10/10 tests |
+| `dotnet test backend/tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 17/17 tests |
 | `dotnet run --project backend/Vpims.API --configuration Debug` | 🟡 Applies migration and seed path; this review hit a local port conflict before re-confirming a fresh listening state |
 | `npm --prefix frontend/admin run build` | ✅ Passes |
 | Latest documented browser smoke checks for admin login, dashboard, customer detail, parts workspace | ✅ Passes |
 | Latest documented live browser retests for booking, vehicles refresh, totals display, vendors/appointments shell copy, appointments action visibility | ✅ Passes |
-| Frontend test command | ⏳ Not available because no suite is committed |
+| `pnpm --dir frontend/admin test:run` | ✅ Passes with the committed Vitest suite |
+
+## ✉️ SMTP Configuration
+
+Both invoice emails and automated alert emails use the `InvoiceEmail` section in `backend/Vpims.API/appsettings.json` or environment overrides.
+
+Required settings:
+
+- `InvoiceEmail__Host`
+- `InvoiceEmail__Port`
+- `InvoiceEmail__Username`
+- `InvoiceEmail__Password`
+- `InvoiceEmail__FromEmail`
+- `InvoiceEmail__FromName`
+- `InvoiceEmail__EnableSsl`
+
+Default repository values are placeholders only. Local development keeps alert generation running even when SMTP is intentionally unset, but live invoice or alert delivery will not work until real mail-server values are supplied.
 
 ## 👨‍👩‍👧‍👦 Member Assignment Tracking
 
@@ -241,7 +259,7 @@ Use Git Bash or WSL for the `bash` commands on Windows.
 | Commit a repeatable database migration workflow | ✅ |
 | Add broader regression coverage for appointment UTC persistence and customer self-service vehicle flows | ⏳ |
 | Decide whether remaining active flows on older Redux services should move to the newer feature API layer | ⏳ |
-| Implement financial reports, purchase invoice workflow, invoice email delivery, and automated low-stock or overdue-credit notifications | ⏳ |
+| Complete live SMTP verification for invoice and alert emails | ⏳ |
 | Expand employee-facing customer history views and related reports | ⏳ |
 | Clean up or retire inactive legacy frontend code | ⏳ |
 

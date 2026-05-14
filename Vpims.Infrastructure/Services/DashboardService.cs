@@ -10,7 +10,8 @@ namespace Vpims.Infrastructure.Services;
 public sealed class DashboardService(
     IPartRepository partRepository,
     IUserRepository userRepository,
-    ICustomerRepository customerRepository) : IDashboardService
+    ICustomerRepository customerRepository,
+    IAlertService alertService) : IDashboardService
 {
     public async Task<DashboardSummaryResponse> GetSummaryAsync(
         UserProfileResponse currentUser,
@@ -32,7 +33,8 @@ public sealed class DashboardService(
             return new DashboardSummaryResponse
             {
                 Inventory = BuildInventorySummary(parts),
-                Staff = BuildStaffSummary(staffUsers)
+                Staff = BuildStaffSummary(staffUsers),
+                Alerts = await alertService.GetAlertSummaryAsync(cancellationToken)
             };
         }
 

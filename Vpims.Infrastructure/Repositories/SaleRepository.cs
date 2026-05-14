@@ -20,6 +20,20 @@ public sealed class SaleRepository(AppDbContext dbContext) : ISalesRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Sale>> GetOverdueSalesAsync(DateTimeOffset asOf, CancellationToken cancellationToken = default)
+    {
+        DateTimeOffset overdueThreshold = asOf.AddMonths(-1);
+
+        return await dbContext.Sales
+            .AsNoTracking()
+            .Include(s => s.Customer)
+            .Where(s => s.PaymentStatus != "Paid"
+                && s.DueDate.HasValue
+                && s.DueDate.Value <= overdueThreshold)
+            .OrderBy(s => s.DueDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<Sale?> GetByIdAsync(int saleId, CancellationToken cancellationToken = default)
     {
         return await dbContext.Sales

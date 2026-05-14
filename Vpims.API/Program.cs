@@ -53,6 +53,7 @@ builder.Services.Configure<InvoiceEmailOptions>(
 
 builder.Services.AddScoped<IStaffSalesService, StaffSalesService>();
 builder.Services.AddScoped<IEmailService, SmtpEmailService>();
+builder.Services.AddHostedService<AlertGenerationBackgroundService>();
 
 //
 // JWT Authentication
