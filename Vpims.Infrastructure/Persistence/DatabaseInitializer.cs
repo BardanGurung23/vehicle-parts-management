@@ -10,6 +10,7 @@ namespace Vpims.Infrastructure.Persistence;
 
 public sealed class DatabaseInitializer(
     AppDbContext dbContext,
+    Vpims.Infrastructure.Data.VpimsDbContext vpimsDbContext,
     IHostEnvironment environment,
     IOptions<DatabaseInitializationOptions> options,
     DemoDataSeeder demoDataSeeder,
@@ -31,7 +32,11 @@ public sealed class DatabaseInitializer(
         "sales_invoices",
         "sales_invoice_items",
         "purchase_invoices",
-        "purchase_invoice_items"
+        "purchase_invoice_items",
+        "staff_customers",
+        "staff_vehicle_parts",
+        "staff_sales",
+        "staff_sale_items"
     ];
 
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
@@ -50,8 +55,11 @@ public sealed class DatabaseInitializer(
             {
                 logger.LogWarning("Resetting local database because the schema does not match the final baseline.");
                 await RecreateDatabaseAsync(cancellationToken);
+                NpgsqlConnection.ClearAllPools();
             }
         }
+
+        await vpimsDbContext.Database.EnsureCreatedAsync(cancellationToken);
 
         await dbContext.Database.MigrateAsync(cancellationToken);
 

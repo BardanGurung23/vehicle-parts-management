@@ -19,12 +19,14 @@ public class VpimsDbContext(DbContextOptions<VpimsDbContext> options) : DbContex
 
         modelBuilder.Entity<Customer>(entity =>
         {
+            entity.ToTable("staff_customers");
             entity.Property(customer => customer.FullName).IsRequired();
             entity.Property(customer => customer.Email).IsRequired();
         });
 
         modelBuilder.Entity<VehiclePart>(entity =>
         {
+            entity.ToTable("staff_vehicle_parts");
             entity.HasIndex(part => part.PartNumber).IsUnique();
             entity.Property(part => part.PartNumber).IsRequired();
             entity.Property(part => part.Name).IsRequired();
@@ -33,6 +35,7 @@ public class VpimsDbContext(DbContextOptions<VpimsDbContext> options) : DbContex
 
         modelBuilder.Entity<Sale>(entity =>
         {
+            entity.ToTable("staff_sales");
             entity.HasIndex(sale => sale.InvoiceNumber).IsUnique();
             entity.Property(sale => sale.InvoiceNumber).IsRequired();
             entity.Property(sale => sale.Subtotal).HasPrecision(18, 2);
@@ -47,6 +50,7 @@ public class VpimsDbContext(DbContextOptions<VpimsDbContext> options) : DbContex
 
         modelBuilder.Entity<SaleItem>(entity =>
         {
+            entity.ToTable("staff_sale_items");
             entity.Property(item => item.UnitPrice).HasPrecision(18, 2);
             entity.Property(item => item.LineTotal).HasPrecision(18, 2);
 

@@ -12,8 +12,6 @@ public static class VpimsDbSeeder
         await using var scope = services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<VpimsDbContext>();
 
-        await dbContext.Database.MigrateAsync(cancellationToken);
-
         if (!await dbContext.Customers.AnyAsync(cancellationToken))
         {
             dbContext.Customers.AddRange(
