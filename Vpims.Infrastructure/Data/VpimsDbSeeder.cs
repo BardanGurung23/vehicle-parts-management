@@ -1,17 +1,15 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vpims.Domain.Models;
 
 namespace Vpims.Infrastructure.Data;
 
-public static class VpimsDbSeeder
+public sealed class VpimsDbSeeder(
+    VpimsDbContext dbContext,
+    ILogger<VpimsDbSeeder> logger)
 {
-    public static async Task SeedAsync(IServiceProvider services, ILogger logger, CancellationToken cancellationToken = default)
+    public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
-        await using var scope = services.CreateAsyncScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<VpimsDbContext>();
-
         if (!await dbContext.Customers.AnyAsync(cancellationToken))
         {
             dbContext.Customers.AddRange(

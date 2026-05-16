@@ -18,7 +18,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Architecture | ✅ Complete | Flow remains Controller -> Service -> Repository -> DbContext |
 | Auth | ✅ Implemented | Canonical self-registration and login live under `/api/auth/*` |
 | Final schema | ✅ Implemented | EF Core baseline migration is the single schema authority |
-| Dev/test reset | ✅ Implemented | Startup drops mismatched local DBs, reapplies schema, reseeds demo data |
+| Dev/test reset | ✅ Implemented | Guided preflight validates PostgreSQL availability, protects non-demo local data, and recreates incompatible local DBs only after explicit confirmation |
 | Customer flows | ✅ Implemented | Staff create/search/detail plus customer signup, profile update, and vehicle add/edit/remove flows are live |
 | Staff admin | ✅ Implemented | Staff list, create, roles, and role update are live |
 | Vendors | ✅ Implemented | Vendor CRUD is available for admin users |
@@ -43,9 +43,10 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | 🧱 Concern | Final behavior |
 | --- | --- |
 | Schema authority | EF Core migrations under `Vpims.Infrastructure/Migrations` |
-| Startup path | `DatabaseInitializer` validates DB state during Development/Test |
-| Mismatch handling | Existing local DB is dropped and recreated if schema drift is detected |
-| Seed source | Canonical demo dataset is inserted after migration |
+| Guided startup path | `Vpims.DatabasePreflight` validates host readiness, schema compatibility, and reset safety before startup |
+| Direct API startup | `DatabaseInitializer` now fails fast if the database requires a guided destructive reset |
+| Mismatch handling | Incompatible local DBs require explicit confirmation, and resets are blocked by default when non-demo or unclassified local data exists |
+| Seed source | Canonical demo dataset plus the staff-sales seed are inserted during initialization |
 | Legacy SQL | `backend/sql/basic-sql.sql` is not the local development source of truth |
 | Expected outcome for cloned projects | Local development converges to the committed final schema automatically |
 
@@ -101,7 +102,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | ASP.NET Core API with controllers, JWT auth, RBAC, CORS, and exception middleware | ✅ |
 | Clean Architecture solution with API, Application, Domain, Infrastructure, and CLI tooling | ✅ |
 | EF Core baseline migration as the single final schema authority | ✅ |
-| Dev/test startup auto-reset plus canonical demo seeding | ✅ |
+| Cross-platform database preflight plus guided reset workflow | ✅ |
 | Customer self-registration, login, current-customer detail, profile update, vehicle add/edit/remove | ✅ |
 | Staff management end to end | ✅ |
 | Staff/admin customer registration, search, and detail lookup | ✅ |
@@ -147,8 +148,9 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | --- | --- |
 | `dotnet build backend/vpims-backend.sln` | ✅ Passes |
 | `bash tests/run-backend-tests.sh` | ✅ Passes |
-| `dotnet test tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 29/29 tests |
-| `dotnet run --project backend/Vpims.API --configuration Debug` | 🟡 Applies migration and seed path; this review hit a local port conflict before re-confirming a fresh listening state |
+| `dotnet test tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 36/36 tests |
+| `dotnet run --project backend/tools/Vpims.DatabasePreflight` | ✅ Reports a compatible PostgreSQL database at `autonix_db` on this machine |
+| `dotnet run --project backend/Vpims.API --configuration Debug` | ✅ Direct startup remains available when the database is already compatible |
 | `npm --prefix frontend/admin run build` | ✅ Passes |
 | `npm --prefix frontend/admin run lint` | ✅ Passes |
 | `npm --prefix frontend/admin run test:run` | ✅ Passes with 3/3 tests |
@@ -220,7 +222,9 @@ With placeholder values, `SmtpEmailService` rejects delivery with a validation e
 
 | Task | Command |
 | --- | --- |
-| Run backend API | `dotnet run --project backend/Vpims.API --configuration Debug` |
+| Report database preflight | `dotnet run --project backend/tools/Vpims.DatabasePreflight` |
+| Guided backend startup | `npm run start:backend` |
+| Run backend API directly | `dotnet run --project backend/Vpims.API --configuration Debug` |
 | Run frontend admin app | `npm --prefix frontend/admin run start` |
 | Build backend solution | `dotnet build backend/vpims-backend.sln` |
 | Build frontend admin app | `npm --prefix frontend/admin run build` |
@@ -231,7 +235,9 @@ With placeholder values, `SmtpEmailService` rejects delivery with a validation e
 
 | Task | Command |
 | --- | --- |
-| Run backend API | `dotnet run --project backend/Vpims.API --configuration Debug` |
+| Report database preflight | `dotnet run --project backend/tools/Vpims.DatabasePreflight` |
+| Guided backend startup | `npm run start:backend` |
+| Run backend API directly | `dotnet run --project backend/Vpims.API --configuration Debug` |
 | Run frontend admin app | `npm --prefix frontend/admin run start` |
 | Build backend solution | `dotnet build backend/vpims-backend.sln` |
 | Build frontend admin app | `npm --prefix frontend/admin run build` |
@@ -239,6 +245,8 @@ With placeholder values, `SmtpEmailService` rejects delivery with a validation e
 | Bootstrap first admin | `bash backend/scripts/bootstrap-first-admin.sh "Full Name" email@example.com 9800000000 password` |
 
 Use Git Bash or WSL for the `bash` commands on Windows.
+
+Direct API startup is now intentionally stricter than the guided startup path. If the local database needs a destructive reset, the API will abort and tell you to run the preflight tool first instead of dropping data during web-host startup.
 
 ### Default Local URLs
 

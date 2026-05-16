@@ -1,6 +1,5 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 using Vpims.API.Middlewares;
@@ -9,7 +8,6 @@ using Vpims.Application.Common;
 using Vpims.Application.Interfaces;
 
 using Vpims.Infrastructure;
-using Vpims.Infrastructure.Data;
 using Vpims.Infrastructure.Options;
 using Vpims.Infrastructure.Persistence;
 using Vpims.Infrastructure.Services;
@@ -18,30 +16,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
-
-//
-// Database Configuration
-//
-var connectionString = builder.Configuration.GetConnectionString("defaultConnection");
-
-var useInMemoryDatabase =
-    builder.Environment.IsDevelopment() &&
-    (string.IsNullOrWhiteSpace(connectionString) ||
-     connectionString.Contains("DATABASE_NAME", StringComparison.OrdinalIgnoreCase) ||
-     connectionString.Contains("YOUR_POSTGRES_USERNAME", StringComparison.OrdinalIgnoreCase) ||
-     connectionString.Contains("YOUR_POSTGRES_PASSWORD", StringComparison.OrdinalIgnoreCase));
-
-builder.Services.AddDbContext<VpimsDbContext>(options =>
-{
-    if (useInMemoryDatabase)
-    {
-        options.UseInMemoryDatabase("VpimsStaffSalesDb");
-        return;
-    }
-
-    options.UseNpgsql(connectionString)
-       .UseSnakeCaseNamingConvention();
-});
 
 //
 // Infrastructure Services
@@ -115,10 +89,8 @@ using (var scope = app.Services.CreateScope())
     var databaseInitializer =
         scope.ServiceProvider.GetRequiredService<DatabaseInitializer>();
 
-    await databaseInitializer.InitializeAsync();
+    await databaseInitializer.InitializeAsync(DatabaseInitializationRequest.ForStartup());
 }
-
-await VpimsDbSeeder.SeedAsync(app.Services, app.Logger);
 
 //
 // Development Tools
