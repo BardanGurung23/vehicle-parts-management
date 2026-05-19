@@ -4,6 +4,7 @@ using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Appointments;
 using Vpims.Application.DTOs.Customers;
 using Vpims.Application.DTOs.Sales;
+using Vpims.Application.DTOs.VehicleInsights;
 using Vpims.Application.Interfaces.Services;
 
 namespace Vpims.API.Controllers;
@@ -14,7 +15,8 @@ public sealed class CustomersController(
     ICustomerService customerService,
     IAuthService authService,
     IAppointmentService appointmentService,
-    ISaleService saleService) : ControllerBase
+    ISaleService saleService,
+    IAiVehicleInsightsService aiVehicleInsightsService) : ControllerBase
 {
     [AllowAnonymous]
     [HttpPost("register")]
@@ -36,6 +38,14 @@ public sealed class CustomersController(
     {
         CustomerDetailResponse response = await customerService.CreateCustomerAsync(request, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { customerId = response.CustomerId }, response);
+    }
+
+    [Authorize(Roles = "Admin,Staff")]
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<CustomerSearchResultResponse>>> GetAll(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<CustomerSearchResultResponse> response = await customerService.GetCustomersAsync(cancellationToken);
+        return Ok(response);
     }
 
     [Authorize(Roles = "Admin,Staff")]
@@ -145,6 +155,23 @@ public sealed class CustomersController(
     {
         UserProfileResponse currentUser = await authService.GetCurrentUserAsync(User, cancellationToken);
         IReadOnlyList<VehicleResponse> response = await customerService.GetMyVehiclesAsync(currentUser, cancellationToken);
+        return Ok(response);
+    }
+
+    [Authorize(Roles = "Customer")]
+    [HttpGet("me/vehicles/{vehicleId:int}/insights")]
+    [ProducesResponseType<VehicleInsightsResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<VehicleInsightsResponse>> GetVehicleInsights(
+        int vehicleId,
+        CancellationToken cancellationToken)
+    {
+        UserProfileResponse currentUser = await authService.GetCurrentUserAsync(User, cancellationToken);
+        CustomerDetailResponse customer = await customerService.GetCustomerByUserIdAsync(currentUser.UserId, cancellationToken);
+        VehicleInsightsResponse response = await aiVehicleInsightsService.GetVehicleInsightsAsync(
+            customer.CustomerId,
+            vehicleId,
+            cancellationToken);
+
         return Ok(response);
     }
 }

@@ -8,7 +8,11 @@ public sealed class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
 {
     public void Configure(EntityTypeBuilder<Vehicle> builder)
     {
-        builder.ToTable("vehicles");
+        builder.ToTable("vehicles", tableBuilder =>
+        {
+            tableBuilder.HasCheckConstraint("ck_vehicles_mileage_non_negative", "mileage IS NULL OR mileage >= 0");
+            tableBuilder.HasCheckConstraint("ck_vehicles_manufacture_year_range", "manufacture_year IS NULL OR (manufacture_year >= 1950 AND manufacture_year <= 2100)");
+        });
 
         builder.HasKey(vehicle => vehicle.VehicleId);
 
@@ -28,6 +32,15 @@ public sealed class VehicleConfiguration : IEntityTypeConfiguration<Vehicle>
         builder.Property(vehicle => vehicle.Model)
             .HasColumnName("model")
             .HasMaxLength(80);
+
+        builder.Property(vehicle => vehicle.Mileage)
+            .HasColumnName("mileage");
+
+        builder.Property(vehicle => vehicle.ManufactureYear)
+            .HasColumnName("manufacture_year");
+
+        builder.Property(vehicle => vehicle.LastServiceDate)
+            .HasColumnName("last_service_date");
 
         builder.Property(vehicle => vehicle.CreatedAt)
             .HasColumnName("created_at")

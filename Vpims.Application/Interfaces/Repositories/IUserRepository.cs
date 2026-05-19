@@ -20,5 +20,7 @@ public interface IUserRepository
 
     Task<User> UpdateRoleAsync(User user, int roleId, CancellationToken cancellationToken = default);
 
+    Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default);
+
     Task<User> UpdateStaffAsync(User user, CancellationToken cancellationToken = default);
 }

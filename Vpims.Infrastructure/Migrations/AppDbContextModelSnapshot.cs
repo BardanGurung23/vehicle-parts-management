@@ -155,6 +155,11 @@ namespace Vpims.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("description");
 
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("image_url");
+
                     b.Property<int?>("PartCategoryId")
                         .HasColumnType("integer")
                         .HasColumnName("part_category_id");
@@ -723,6 +728,18 @@ namespace Vpims.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("customer_id");
 
+                    b.Property<DateTimeOffset?>("LastServiceDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_service_date");
+
+                    b.Property<int?>("ManufactureYear")
+                        .HasColumnType("integer")
+                        .HasColumnName("manufacture_year");
+
+                    b.Property<int?>("Mileage")
+                        .HasColumnType("integer")
+                        .HasColumnName("mileage");
+
                     b.Property<string>("Model")
                         .HasMaxLength(80)
                         .HasColumnType("character varying(80)")
@@ -743,7 +760,12 @@ namespace Vpims.Infrastructure.Migrations
                         .IsUnique()
                         .HasDatabaseName("ix_vehicles_vehicle_number");
 
-                    b.ToTable("vehicles", (string)null);
+                    b.ToTable("vehicles", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_vehicles_manufacture_year_range", "manufacture_year IS NULL OR (manufacture_year >= 1950 AND manufacture_year <= 2100)");
+
+                            t.HasCheckConstraint("ck_vehicles_mileage_non_negative", "mileage IS NULL OR mileage >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Vpims.Domain.Entities.Vendor", b =>

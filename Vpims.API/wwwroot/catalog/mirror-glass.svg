@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-labelledby="title desc">
+  <title id="title">Mirror glass illustration</title>
+  <desc id="desc">Side mirror glass kit with clean product composition.</desc>
+  <rect width="480" height="320" rx="28" fill="#111827"/>
+  <rect x="42" y="42" width="396" height="236" rx="24" fill="#f8fafc"/>
+  <path d="M148 110c0-18 14-32 32-32h118c48 0 88 40 88 88v18c0 36-28 64-64 64H180c-18 0-32-14-32-32z" fill="#334155"/>
+  <path d="M172 126h132c30 0 54 24 54 54v4c0 20-16 36-36 36H180c-4 0-8-4-8-8z" fill="#bfdbfe"/>
+  <path d="M190 140c44 8 86 34 128 76" stroke="#e0f2fe" stroke-width="8" stroke-linecap="round" opacity="0.8"/>
+  <circle cx="382" cy="88" r="20" fill="#22c55e"/>
+</svg>

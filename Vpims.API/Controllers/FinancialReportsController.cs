@@ -40,4 +40,12 @@ public sealed class FinancialReportsController(IFinancialReportService financial
         FinancialReportResponse report = await financialReportService.GetYearlyReportAsync(year, cancellationToken);
         return Ok(report);
     }
+
+    [HttpGet("all-time")]
+    [ProducesResponseType<FinancialReportResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<FinancialReportResponse>> GetAllTime(CancellationToken cancellationToken)
+    {
+        FinancialReportResponse report = await financialReportService.GetAllTimeReportAsync(cancellationToken);
+        return Ok(report);
+    }
 }

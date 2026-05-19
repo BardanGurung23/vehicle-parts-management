@@ -16,4 +16,7 @@ public interface IFinancialReportService
     Task<FinancialReportResponse> GetYearlyReportAsync(
         int? year = null,
         CancellationToken cancellationToken = default);
+
+    Task<FinancialReportResponse> GetAllTimeReportAsync(
+        CancellationToken cancellationToken = default);
 }

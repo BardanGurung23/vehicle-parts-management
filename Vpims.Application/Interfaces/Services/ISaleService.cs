@@ -18,6 +18,11 @@ public interface ISaleService
         UserProfileResponse currentUser,
         CancellationToken cancellationToken = default);
 
+    Task<SendSaleInvoiceEmailResponse> SendInvoiceEmailAsync(
+        int saleId,
+        UserProfileResponse currentUser,
+        CancellationToken cancellationToken = default);
+
     Task<SaleResponse> CreateSaleAsync(
         CreateSaleRequest request,
         UserProfileResponse currentUser,

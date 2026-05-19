@@ -1,9 +1,11 @@
+using Microsoft.Extensions.Options;
 using Vpims.Application.Common;
 using Vpims.Application.DTOs.Alerts;
 using Vpims.Application.Interfaces;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Domain.Entities;
+using Vpims.Infrastructure.Options;
 
 namespace Vpims.Infrastructure.Services;
 
@@ -12,15 +14,15 @@ public sealed class AlertService(
     ISalesRepository salesRepository,
     IPredictiveAlertRepository predictiveAlertRepository,
     IUserRepository userRepository,
-    IEmailService emailService) : IAlertService
+    IEmailService emailService,
+    IOptions<AlertConfigurationOptions> configuration) : IAlertService
 {
-    private const int LowStockThreshold = 10;
-    private const int DashboardItemLimit = 5;
+    private readonly AlertConfigurationOptions alertConfiguration = NormalizeOptions(configuration.Value);
 
     public async Task<AlertSummaryResponse> GetAlertSummaryAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<Part> allParts = await partRepository.GetAllAsync(cancellationToken);
-        IReadOnlyList<Sale> overdueSales = await salesRepository.GetOverdueSalesAsync(DateTimeOffset.UtcNow, cancellationToken);
+        IReadOnlyList<Sale> overdueSales = await salesRepository.GetOverdueSalesAsync(alertConfiguration.OverdueCreditMonthsThreshold, DateTimeOffset.UtcNow, cancellationToken);
         IReadOnlyList<PredictiveAlert> predictiveAlerts = await predictiveAlertRepository.GetActiveAsync(cancellationToken);
 
         return BuildSummary(allParts, overdueSales, predictiveAlerts, DateTimeOffset.UtcNow);
@@ -65,7 +67,7 @@ public sealed class AlertService(
         }
 
         IReadOnlyList<Part> allParts = await partRepository.GetAllAsync(cancellationToken);
-        IReadOnlyList<Sale> overdueSales = await salesRepository.GetOverdueSalesAsync(generatedAt, cancellationToken);
+    IReadOnlyList<Sale> overdueSales = await salesRepository.GetOverdueSalesAsync(alertConfiguration.OverdueCreditMonthsThreshold, generatedAt, cancellationToken);
         IReadOnlyList<PredictiveAlert> refreshedPredictiveAlerts = await predictiveAlertRepository.GetActiveAsync(cancellationToken);
 
         await SendLowStockAlertEmailsAsync(allParts, cancellationToken);
@@ -77,7 +79,7 @@ public sealed class AlertService(
     private async Task SendLowStockAlertEmailsAsync(IReadOnlyList<Part> allParts, CancellationToken cancellationToken)
     {
         IReadOnlyList<Part> lowStockParts = allParts
-            .Where(part => part.StockQuantity < LowStockThreshold)
+            .Where(part => part.StockQuantity < alertConfiguration.LowStockThreshold)
             .OrderBy(part => part.StockQuantity)
             .ThenBy(part => part.PartName)
             .ToList();
@@ -95,11 +97,11 @@ public sealed class AlertService(
         }
 
         string tableRows = string.Join(string.Empty, lowStockParts.Select(part =>
-            $"<tr><td style=\"padding:8px;border:1px solid #d0d7de;\">{part.PartName}</td><td style=\"padding:8px;border:1px solid #d0d7de;\">{part.PartNumber}</td><td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{part.StockQuantity}</td><td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{LowStockThreshold}</td></tr>"));
+            $"<tr><td style=\"padding:8px;border:1px solid #d0d7de;\">{part.PartName}</td><td style=\"padding:8px;border:1px solid #d0d7de;\">{part.PartNumber}</td><td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{part.StockQuantity}</td><td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{alertConfiguration.LowStockThreshold}</td></tr>"));
         string htmlBody = $"""
             <div style="font-family:Segoe UI,Arial,sans-serif;color:#1f2933;">
                 <h2>Low-stock summary</h2>
-                <p>The following parts are below the operational threshold of {LowStockThreshold} units.</p>
+                <p>The following parts are below the operational threshold of {alertConfiguration.LowStockThreshold} units.</p>
                 <table style="border-collapse:collapse;width:100%;margin:16px 0;">
                     <thead>
                         <tr style="background:#f4f6f8;">
@@ -172,17 +174,17 @@ public sealed class AlertService(
         }
     }
 
-    private static AlertSummaryResponse BuildSummary(
+    private AlertSummaryResponse BuildSummary(
         IReadOnlyList<Part> allParts,
         IReadOnlyList<Sale> overdueSales,
         IReadOnlyList<PredictiveAlert> predictiveAlerts,
         DateTimeOffset generatedAt)
     {
         IReadOnlyList<LowStockAlertResponse> lowStockAlerts = allParts
-            .Where(part => part.StockQuantity < LowStockThreshold)
+            .Where(part => part.StockQuantity < alertConfiguration.LowStockThreshold)
             .OrderBy(part => part.StockQuantity)
             .ThenBy(part => part.PartName)
-            .Take(DashboardItemLimit)
+            .Take(alertConfiguration.DashboardAlertLimit)
             .Select(part => new LowStockAlertResponse
             {
                 PartId = part.PartId,
@@ -190,13 +192,13 @@ public sealed class AlertService(
                 PartName = part.PartName,
                 CategoryName = part.Category?.CategoryName,
                 StockQuantity = part.StockQuantity,
-                Threshold = LowStockThreshold,
+                Threshold = alertConfiguration.LowStockThreshold,
             })
             .ToList();
 
         IReadOnlyList<OverdueCreditAlertResponse> overdueCreditAlerts = overdueSales
             .OrderByDescending(sale => sale.DueDate)
-            .Take(DashboardItemLimit)
+            .Take(alertConfiguration.DashboardAlertLimit)
             .Select(sale => new OverdueCreditAlertResponse
             {
                 SaleId = sale.SaleId,
@@ -214,7 +216,7 @@ public sealed class AlertService(
             .ToList();
 
         IReadOnlyList<PredictiveAlertResponse> predictiveAlertResponses = predictiveAlerts
-            .Take(DashboardItemLimit)
+            .Take(alertConfiguration.DashboardAlertLimit)
             .Select(alert => new PredictiveAlertResponse
             {
                 PredictiveAlertId = alert.PredictiveAlertId,
@@ -241,6 +243,16 @@ public sealed class AlertService(
             LowStockAlerts = lowStockAlerts,
             OverdueCreditAlerts = overdueCreditAlerts,
             PredictiveAlerts = predictiveAlertResponses,
+        };
+    }
+
+    private static AlertConfigurationOptions NormalizeOptions(AlertConfigurationOptions? options)
+    {
+        return new AlertConfigurationOptions
+        {
+            LowStockThreshold = Math.Max(0, options?.LowStockThreshold ?? 10),
+            OverdueCreditMonthsThreshold = Math.Max(0, options?.OverdueCreditMonthsThreshold ?? 1),
+            DashboardAlertLimit = Math.Max(1, options?.DashboardAlertLimit ?? 5),
         };
     }
 }

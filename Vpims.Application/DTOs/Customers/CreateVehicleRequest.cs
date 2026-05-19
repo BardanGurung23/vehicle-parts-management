@@ -10,4 +10,12 @@ public sealed class CreateVehicleRequest
 
     [StringLength(80)]
     public string? Model { get; set; }
+
+    [Range(0, 2_000_000)]
+    public int? Mileage { get; set; }
+
+    [Range(1950, 2100)]
+    public int? ManufactureYear { get; set; }
+
+    public DateTimeOffset? LastServiceDate { get; set; }
 }

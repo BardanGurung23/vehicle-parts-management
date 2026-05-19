@@ -74,6 +74,40 @@ public sealed class FinancialReportService(IFinancialReportRepository financialR
             bucketLabelFactory: timestamp => timestamp.UtcDateTime.ToString("yyyy-MM"));
     }
 
+    public async Task<FinancialReportResponse> GetAllTimeReportAsync(
+        CancellationToken cancellationToken = default)
+    {
+        DateTimeOffset queryStart = DateTimeOffset.UnixEpoch;
+        DateTimeOffset queryEndExclusive = DateTimeOffset.UtcNow.AddDays(1);
+
+        IReadOnlyList<Sale> sales = await financialReportRepository.GetSalesInRangeAsync(queryStart, queryEndExclusive, cancellationToken);
+        IReadOnlyList<PurchaseInvoice> purchaseInvoices = await financialReportRepository.GetPurchaseInvoicesInRangeAsync(queryStart, queryEndExclusive, cancellationToken);
+
+        IReadOnlyList<int> years = sales
+            .Select(sale => sale.SaleDate.UtcDateTime.Year)
+            .Concat(purchaseInvoices.Select(invoice => invoice.InvoiceDate.UtcDateTime.Year))
+            .DefaultIfEmpty(DateTime.UtcNow.Year)
+            .OrderBy(year => year)
+            .ToList();
+
+        int startYear = years.First();
+        int endYear = years.Last();
+        DateTimeOffset rangeStart = new(new DateTime(startYear, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        DateTimeOffset rangeEnd = new(new DateTime(endYear + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        string periodLabel = startYear == endYear
+            ? $"All time · {startYear:D4}"
+            : $"All time · {startYear:D4}-{endYear:D4}";
+
+        return BuildReport(
+            reportType: "All Time",
+            periodLabel,
+            rangeStart,
+            rangeEnd,
+            sales,
+            purchaseInvoices,
+            bucketLabelFactory: timestamp => timestamp.UtcDateTime.ToString("yyyy"));
+    }
+
     private static FinancialReportResponse BuildReport(
         string reportType,
         string periodLabel,

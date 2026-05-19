@@ -1,5 +1,6 @@
 using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Auth;
+using Vpims.Application.DTOs.Customers;
 using Vpims.Application.DTOs.Dashboard;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
@@ -29,22 +30,27 @@ public sealed class DashboardService(
         {
             IReadOnlyList<Part> parts = await partRepository.GetAllAsync(cancellationToken);
             IReadOnlyList<User> staffUsers = await userRepository.GetStaffUsersAsync(cancellationToken);
+            IReadOnlyList<Customer> customers = await customerRepository.GetAllAsync(cancellationToken);
 
             return new DashboardSummaryResponse
             {
                 Inventory = BuildInventorySummary(parts),
                 Staff = BuildStaffSummary(staffUsers),
-                Alerts = await alertService.GetAlertSummaryAsync(cancellationToken)
+                Alerts = await alertService.GetAlertSummaryAsync(cancellationToken),
+                RecentRegisteredCustomers = BuildRecentRegisteredCustomers(customers)
             };
         }
 
         if (currentUser.Role == SystemRoles.Staff)
         {
             IReadOnlyList<Part> parts = await partRepository.GetAllAsync(cancellationToken);
+            IReadOnlyList<Customer> customers = await customerRepository.GetAllAsync(cancellationToken);
 
             return new DashboardSummaryResponse
             {
-                Inventory = BuildInventorySummary(parts)
+                Inventory = BuildInventorySummary(parts),
+                Alerts = await alertService.GetAlertSummaryAsync(cancellationToken),
+                RecentRegisteredCustomers = BuildRecentRegisteredCustomers(customers)
             };
         }
 
@@ -59,6 +65,17 @@ public sealed class DashboardService(
             ?? throw new NotFoundException("Customer profile not found.");
 
         return UserMapper.ToCustomerDetailResponse(customer);
+    }
+
+    private static IReadOnlyList<CustomerSearchResultResponse> BuildRecentRegisteredCustomers(IReadOnlyList<Customer> customers)
+    {
+        return customers
+            .Where(customer => customer.UserId.HasValue)
+            .OrderByDescending(customer => customer.RegisteredAt)
+            .ThenBy(customer => customer.FullName)
+            .Take(5)
+            .Select(UserMapper.ToCustomerSearchResultResponse)
+            .ToList();
     }
 
     private static DashboardInventorySummaryResponse BuildInventorySummary(IReadOnlyList<Part> parts)

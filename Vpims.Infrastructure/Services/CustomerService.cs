@@ -24,32 +24,36 @@ public sealed class CustomerService(
         string fullName = NormalizeRequiredFullName(request.FullName);
         string? vehicleNumber = NormalizeOptionalVehicleNumber(request.VehicleNumber);
         string? vehicleModel = NormalizeOptionalModel(request.VehicleModel);
+        string? address = NormalizeOptionalValue(request.Address);
 
         EnsureVehicleFields(vehicleNumber, vehicleModel);
 
+        Customer? existingCustomer = await FindClaimCandidateAsync(phoneNumber, email, vehicleNumber, cancellationToken);
+
+        if (existingCustomer is not null)
+        {
+            return await AttachPortalUserToExistingCustomerAsync(
+                existingCustomer,
+                fullName,
+                email,
+                phoneNumber,
+                address,
+                request.Password,
+                vehicleNumber,
+                vehicleModel,
+                cancellationToken);
+        }
+
         await EnsureUniqueCustomerIdentityAsync(email, phoneNumber, vehicleNumber, cancellationToken);
 
-        Role customerRole = await roleRepository.GetByNameAsync(SystemRoles.Customer, cancellationToken)
-            ?? throw new NotFoundException("The Customer role is missing from the database.");
-
-        var user = new User
-        {
-            RoleId = customerRole.RoleId,
-            FullName = fullName,
-            Email = email,
-            PhoneNumber = phoneNumber,
-            CreatedAt = DateTimeOffset.UtcNow,
-            IsActive = true
-        };
-
-        user.PasswordHash = passwordHasher.HashPassword(user, request.Password);
+        User user = await CreateCustomerPortalUserAsync(fullName, email, phoneNumber, request.Password, cancellationToken);
 
         var customer = new Customer
         {
             FullName = fullName,
             PhoneNumber = phoneNumber,
             Email = email,
-            Address = string.IsNullOrWhiteSpace(request.Address) ? null : request.Address.Trim(),
+            Address = address,
             RegisteredAt = DateTimeOffset.UtcNow
         };
 
@@ -87,6 +91,15 @@ public sealed class CustomerService(
 
         Customer createdCustomer = await customerRepository.CreateStaffCustomerAsync(customer, vehicle, cancellationToken);
         return UserMapper.ToCustomerDetailResponse(createdCustomer);
+    }
+
+    public async Task<IReadOnlyList<CustomerSearchResultResponse>> GetCustomersAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<Customer> customers = await customerRepository.GetAllAsync(cancellationToken);
+
+        return customers
+            .Select(UserMapper.ToCustomerSearchResultResponse)
+            .ToList();
     }
 
     public async Task<IReadOnlyList<CustomerSearchResultResponse>> SearchCustomersAsync(
@@ -190,6 +203,145 @@ public sealed class CustomerService(
         {
             throw new AppValidationException("A vehicle with this number already exists.");
         }
+    }
+
+    private async Task<Customer?> FindClaimCandidateAsync(
+        string phoneNumber,
+        string email,
+        string? vehicleNumber,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<Customer> candidates = await customerRepository.GetUnlinkedRegistrationCandidatesAsync(
+            phoneNumber,
+            email,
+            vehicleNumber,
+            cancellationToken);
+
+        if (candidates.Count == 0)
+        {
+            return null;
+        }
+
+        if (candidates.Count > 1)
+        {
+            throw new AppValidationException("We found conflicting customer records for this registration. Please contact staff for assistance.");
+        }
+
+        return candidates[0];
+    }
+
+    private async Task<RegisterCustomerResponse> AttachPortalUserToExistingCustomerAsync(
+        Customer customer,
+        string fullName,
+        string email,
+        string phoneNumber,
+        string? address,
+        string password,
+        string? vehicleNumber,
+        string? vehicleModel,
+        CancellationToken cancellationToken)
+    {
+        await EnsureClaimIdentityAsync(customer, email, phoneNumber, vehicleNumber, cancellationToken);
+
+        User user = await CreateCustomerPortalUserAsync(fullName, email, phoneNumber, password, cancellationToken);
+
+        customer.FullName = fullName;
+        customer.PhoneNumber = phoneNumber;
+        customer.Email = email;
+        customer.Address = address;
+
+        Vehicle? vehicleToCreate = UpsertClaimVehicle(customer, vehicleNumber, vehicleModel);
+
+        Customer claimedCustomer = await customerRepository.AttachPortalUserAsync(user, customer, vehicleToCreate, cancellationToken);
+        return UserMapper.ToRegistrationResponse(user, claimedCustomer);
+    }
+
+    private async Task EnsureClaimIdentityAsync(
+        Customer customer,
+        string email,
+        string phoneNumber,
+        string? vehicleNumber,
+        CancellationToken cancellationToken)
+    {
+        if (await userRepository.ExistsByPhoneNumberAsync(phoneNumber, cancellationToken))
+        {
+            throw new AppValidationException("A customer with this phone number already exists.");
+        }
+
+        if (await userRepository.ExistsByEmailAsync(email, cancellationToken))
+        {
+            throw new AppValidationException("A user with this email already exists.");
+        }
+
+        if (!string.Equals(customer.PhoneNumber, phoneNumber, StringComparison.Ordinal)
+            && await customerRepository.ExistsByPhoneNumberAsync(phoneNumber, cancellationToken))
+        {
+            throw new AppValidationException("A customer with this phone number already exists.");
+        }
+
+        if (!string.Equals(customer.Email, email, StringComparison.Ordinal)
+            && await customerRepository.ExistsByEmailAsync(email, cancellationToken))
+        {
+            throw new AppValidationException("A user with this email already exists.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(vehicleNumber)
+            && !customer.Vehicles.Any(vehicle => string.Equals(vehicle.VehicleNumber, vehicleNumber, StringComparison.Ordinal))
+            && await customerRepository.ExistsByVehicleNumberAsync(vehicleNumber, cancellationToken))
+        {
+            throw new AppValidationException("A vehicle with this number already exists.");
+        }
+    }
+
+    private async Task<User> CreateCustomerPortalUserAsync(
+        string fullName,
+        string email,
+        string phoneNumber,
+        string password,
+        CancellationToken cancellationToken)
+    {
+        Role customerRole = await roleRepository.GetByNameAsync(SystemRoles.Customer, cancellationToken)
+            ?? throw new NotFoundException("The Customer role is missing from the database.");
+
+        var user = new User
+        {
+            RoleId = customerRole.RoleId,
+            FullName = fullName,
+            Email = email,
+            PhoneNumber = phoneNumber,
+            CreatedAt = DateTimeOffset.UtcNow,
+            IsActive = true
+        };
+
+        user.PasswordHash = passwordHasher.HashPassword(user, password);
+        return user;
+    }
+
+    private static Vehicle? UpsertClaimVehicle(Customer customer, string? vehicleNumber, string? vehicleModel)
+    {
+        if (vehicleNumber is null)
+        {
+            return null;
+        }
+
+        Vehicle? existingVehicle = customer.Vehicles.FirstOrDefault(vehicle => vehicle.VehicleNumber == vehicleNumber);
+
+        if (existingVehicle is not null)
+        {
+            if (vehicleModel is not null)
+            {
+                existingVehicle.Model = vehicleModel;
+            }
+
+            return null;
+        }
+
+        return new Vehicle
+        {
+            VehicleNumber = vehicleNumber,
+            Model = vehicleModel,
+            CreatedAt = DateTimeOffset.UtcNow
+        };
     }
 
     private async Task EnsureUniqueProfileIdentityAsync(
@@ -342,6 +494,55 @@ public sealed class CustomerService(
         return model;
     }
 
+    private static int? NormalizeOptionalMileage(int? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        if (value.Value < 0 || value.Value > 2_000_000)
+        {
+            throw new AppValidationException("Vehicle mileage must be between 0 and 2,000,000 km.");
+        }
+
+        return value.Value;
+    }
+
+    private static int? NormalizeOptionalManufactureYear(int? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        int latestAllowedYear = DateTimeOffset.UtcNow.Year + 1;
+
+        if (value.Value < 1950 || value.Value > latestAllowedYear)
+        {
+            throw new AppValidationException($"Vehicle manufacture year must be between 1950 and {latestAllowedYear}.");
+        }
+
+        return value.Value;
+    }
+
+    private static DateTimeOffset? NormalizeOptionalLastServiceDate(DateTimeOffset? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        DateTimeOffset serviceDate = value.Value.ToUniversalTime();
+
+        if (serviceDate > DateTimeOffset.UtcNow.AddDays(1))
+        {
+            throw new AppValidationException("Last service date cannot be in the future.");
+        }
+
+        return serviceDate;
+    }
+
     public async Task<VehicleResponse> AddVehicleAsync(
         UserProfileResponse currentUser,
         CreateVehicleRequest request,
@@ -361,6 +562,9 @@ public sealed class CustomerService(
         {
             VehicleNumber = vehicleNumber,
             Model = NormalizeOptionalModel(request.Model),
+            Mileage = NormalizeOptionalMileage(request.Mileage),
+            ManufactureYear = NormalizeOptionalManufactureYear(request.ManufactureYear),
+            LastServiceDate = NormalizeOptionalLastServiceDate(request.LastServiceDate),
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -390,6 +594,9 @@ public sealed class CustomerService(
 
         vehicle.VehicleNumber = vehicleNumber;
         vehicle.Model = NormalizeOptionalModel(request.Model);
+    vehicle.Mileage = NormalizeOptionalMileage(request.Mileage);
+    vehicle.ManufactureYear = NormalizeOptionalManufactureYear(request.ManufactureYear);
+    vehicle.LastServiceDate = NormalizeOptionalLastServiceDate(request.LastServiceDate);
 
         Vehicle updatedVehicle = await customerRepository.UpdateVehicleAsync(vehicle, cancellationToken);
         return UserMapper.ToVehicleResponse(updatedVehicle);

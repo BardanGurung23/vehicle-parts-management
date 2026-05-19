@@ -80,7 +80,10 @@ internal static class UserMapper
         {
             VehicleId = vehicle.VehicleId,
             VehicleNumber = vehicle.VehicleNumber,
-            Model = vehicle.Model
+            Model = vehicle.Model,
+            Mileage = vehicle.Mileage,
+            ManufactureYear = vehicle.ManufactureYear,
+            LastServiceDate = vehicle.LastServiceDate
         };
     }
 

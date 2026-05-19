@@ -35,6 +35,10 @@ public sealed class PartConfiguration : IEntityTypeConfiguration<Part>
         builder.Property(p => p.Description)
             .HasColumnName("description");
 
+        builder.Property(p => p.ImageUrl)
+            .HasColumnName("image_url")
+            .HasMaxLength(500);
+
         builder.Property(p => p.UnitPrice)
             .HasColumnName("unit_price")
             .HasColumnType("numeric(12,2)")

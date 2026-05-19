@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-labelledby="title desc">
+  <title id="title">Engine oil illustration</title>
+  <desc id="desc">Engine oil container on a dark workshop panel.</desc>
+  <rect width="480" height="320" rx="28" fill="#111827"/>
+  <rect x="42" y="42" width="396" height="236" rx="24" fill="#fff7ed"/>
+  <path d="M168 106h106l26 26v88c0 18-14 32-32 32h-68c-18 0-32-14-32-32z" fill="#f59e0b"/>
+  <rect x="220" y="80" width="30" height="30" rx="10" fill="#9a3412"/>
+  <rect x="188" y="144" width="92" height="56" rx="18" fill="#ffedd5" opacity="0.95"/>
+  <path d="M230 150c10 12 20 28 20 40 0 13-9 22-20 22s-20-9-20-22c0-12 10-28 20-40z" fill="#7c2d12"/>
+  <circle cx="382" cy="88" r="20" fill="#fb7185"/>
+</svg>

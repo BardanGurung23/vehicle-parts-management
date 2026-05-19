@@ -1,6 +1,8 @@
+using System.Net;
 using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Sales;
+using Vpims.Application.Interfaces;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Domain.Entities;
@@ -10,7 +12,8 @@ namespace Vpims.Infrastructure.Services;
 public sealed class SalesService(
     ISalesRepository salesRepository,
     ICustomerRepository customerRepository,
-    IPartRepository partRepository) : ISaleService
+    IPartRepository partRepository,
+    IEmailService emailService) : ISaleService
 {
     private static readonly HashSet<string> AllowedPaymentStatuses = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -48,18 +51,36 @@ public sealed class SalesService(
         UserProfileResponse currentUser,
         CancellationToken cancellationToken = default)
     {
-        Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
-            ?? throw new NotFoundException("Customer profile not found.");
-
-        Sale sale = await salesRepository.GetByIdAsync(saleId, cancellationToken)
-            ?? throw new NotFoundException($"Sale with id {saleId} not found.");
-
-        if (sale.CustomerId != customer.CustomerId)
-        {
-            throw new AppValidationException("You can only view your own sales.");
-        }
+        Sale sale = await GetAuthorizedSaleAsync(saleId, currentUser, cancellationToken);
 
         return ToSaleResponse(sale);
+    }
+
+    public async Task<SendSaleInvoiceEmailResponse> SendInvoiceEmailAsync(
+        int saleId,
+        UserProfileResponse currentUser,
+        CancellationToken cancellationToken = default)
+    {
+        Sale sale = await GetAuthorizedSaleAsync(saleId, currentUser, cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(sale.Customer?.Email))
+        {
+            throw new AppValidationException("The selected customer does not have an email address.");
+        }
+
+        string recipientEmail = sale.Customer.Email.Trim();
+        string subject = $"Invoice {sale.InvoiceNumber} from Autonix";
+        string htmlBody = BuildInvoiceEmailBody(sale);
+
+        await emailService.SendEmailAsync(recipientEmail, subject, htmlBody, cancellationToken);
+
+        return new SendSaleInvoiceEmailResponse
+        {
+            SaleId = sale.SaleId,
+            InvoiceNumber = sale.InvoiceNumber,
+            RecipientEmail = recipientEmail,
+            Message = "Invoice email sent successfully."
+        };
     }
 
     public async Task<SaleResponse> CreateSaleAsync(
@@ -166,6 +187,30 @@ public sealed class SalesService(
         throw new NotFoundException("Customer profile not found.");
     }
 
+    private async Task<Sale> GetAuthorizedSaleAsync(
+        int saleId,
+        UserProfileResponse currentUser,
+        CancellationToken cancellationToken)
+    {
+        Sale sale = await salesRepository.GetByIdAsync(saleId, cancellationToken)
+            ?? throw new NotFoundException($"Sale with id {saleId} not found.");
+
+        if (currentUser.Role is SystemRoles.Admin or SystemRoles.Staff)
+        {
+            return sale;
+        }
+
+        Customer customer = await customerRepository.GetByUserIdAsync(currentUser.UserId, cancellationToken)
+            ?? throw new NotFoundException("Customer profile not found.");
+
+        if (sale.CustomerId != customer.CustomerId)
+        {
+            throw new AppValidationException("You can only view your own sales.");
+        }
+
+        return sale;
+    }
+
     private async Task ValidateVehicleOwnershipAsync(
         int customerId,
         int vehicleId,
@@ -185,6 +230,7 @@ public sealed class SalesService(
             SaleId = sale.SaleId,
             InvoiceNumber = sale.InvoiceNumber,
             CustomerName = sale.Customer?.FullName ?? "Unknown",
+            CustomerEmail = sale.Customer?.Email,
             VehicleNumber = sale.Vehicle?.VehicleNumber,
             SaleDate = sale.SaleDate,
             Subtotal = sale.Subtotal,
@@ -206,6 +252,57 @@ public sealed class SalesService(
     private static string BuildInvoiceNumber(DateTimeOffset saleDate)
     {
         return $"SAL-{saleDate:yyyyMMddHHmmssfff}";
+    }
+
+    private static string BuildInvoiceEmailBody(Sale sale)
+    {
+        string rows = string.Join(string.Empty, sale.Items.Select(item =>
+            "<tr>"
+            + $"<td style=\"padding:8px;border:1px solid #d0d7de;\">{Encode(item.Part?.PartName ?? "Unknown Part")}</td>"
+            + $"<td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{item.Quantity}</td>"
+            + $"<td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{item.UnitPrice:F2}</td>"
+            + $"<td style=\"padding:8px;border:1px solid #d0d7de;text-align:right;\">{item.LineTotal:F2}</td>"
+            + "</tr>"));
+
+        string vehicleMarkup = string.IsNullOrWhiteSpace(sale.Vehicle?.VehicleNumber)
+            ? string.Empty
+            : $"<p><strong>Vehicle:</strong> {Encode(sale.Vehicle.VehicleNumber)}</p>";
+        string dueDateMarkup = sale.DueDate.HasValue
+            ? $"<p><strong>Due date:</strong> {sale.DueDate.Value:yyyy-MM-dd}</p>"
+            : string.Empty;
+        string notesMarkup = string.IsNullOrWhiteSpace(sale.Notes)
+            ? string.Empty
+            : $"<p><strong>Notes:</strong> {Encode(sale.Notes)}</p>";
+
+        return $@"<div style=""font-family:Segoe UI,Arial,sans-serif;color:#1f2933;line-height:1.5;"">
+                <h2>Invoice {Encode(sale.InvoiceNumber)}</h2>
+                <p>Dear {Encode(sale.Customer?.FullName ?? "Customer")},</p>
+                <p>Thank you for choosing Autonix. Your invoice summary is below.</p>
+                {vehicleMarkup}
+                <p><strong>Payment status:</strong> {Encode(sale.PaymentStatus)}</p>
+                {dueDateMarkup}
+                {notesMarkup}
+                <table style=""border-collapse:collapse;width:100%;margin:16px 0;"">
+                    <thead>
+                        <tr style=""background:#f4f6f8;"">
+                            <th style=""padding:8px;border:1px solid #d0d7de;text-align:left;"">Part</th>
+                            <th style=""padding:8px;border:1px solid #d0d7de;text-align:right;"">Qty</th>
+                            <th style=""padding:8px;border:1px solid #d0d7de;text-align:right;"">Unit Price</th>
+                            <th style=""padding:8px;border:1px solid #d0d7de;text-align:right;"">Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>{rows}</tbody>
+                </table>
+                <p><strong>Subtotal:</strong> {sale.Subtotal:F2}</p>
+                <p><strong>Discount:</strong> {sale.DiscountAmount:F2}</p>
+                <p><strong>Invoice total:</strong> {sale.TotalAmount:F2}</p>
+                <p>Regards,<br />Autonix</p>
+            </div>";
+    }
+
+    private static string Encode(string value)
+    {
+        return WebUtility.HtmlEncode(value);
     }
 
     private static string ResolvePaymentStatus(string? paymentStatus)

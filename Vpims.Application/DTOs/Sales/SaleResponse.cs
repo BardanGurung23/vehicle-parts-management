@@ -7,6 +7,7 @@ public sealed class SaleResponse
     public int SaleId { get; set; }
     public string InvoiceNumber { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
+    public string? CustomerEmail { get; set; }
     public string? VehicleNumber { get; set; }
     public DateTimeOffset SaleDate { get; set; }
     public decimal Subtotal { get; set; }

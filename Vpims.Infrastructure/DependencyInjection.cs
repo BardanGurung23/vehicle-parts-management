@@ -2,10 +2,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Vpims.Application.Common;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Domain.Entities;
+using Vpims.Infrastructure.Data;
+using Vpims.Infrastructure.Options;
 using Vpims.Infrastructure.Persistence;
 using Vpims.Infrastructure.Repositories;
 using Vpims.Infrastructure.Security;
@@ -15,19 +18,47 @@ namespace Vpims.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, string webRootPath)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<DatabaseInitializationOptions>(configuration.GetSection(DatabaseInitializationOptions.SectionName));
+        services.Configure<AlertConfigurationOptions>(configuration.GetSection(AlertConfigurationOptions.SectionName));
 
-        string connectionString = configuration.GetConnectionString("defaultConnection")
-            ?? throw new InvalidOperationException("Connection string 'defaultConnection' is missing.");
+        DatabaseInitializationOptions databaseOptions = configuration
+            .GetSection(DatabaseInitializationOptions.SectionName)
+            .Get<DatabaseInitializationOptions>()
+            ?? new DatabaseInitializationOptions();
 
-        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        string? connectionString = configuration.GetConnectionString("defaultConnection");
+
+        services.AddDbContext<AppDbContext>(options => ConfigureAppDbContext(options, databaseOptions, connectionString));
+        services.AddDbContext<VpimsDbContext>(options => ConfigureStaffSalesDbContext(options, databaseOptions, connectionString));
 
         services.AddScoped<PasswordHasher<User>>();
+        services.AddScoped<DatabaseSchemaCompatibilityEvaluator>();
+        services.AddScoped<DatabaseLocalDataSafetyEvaluator>();
+        services.AddScoped<DatabaseInitializationPlanner>();
+        services.AddScoped<IDatabaseLifecycleManager>(serviceProvider =>
+        {
+            DatabaseInitializationOptions configuredOptions = serviceProvider
+                .GetRequiredService<IOptions<DatabaseInitializationOptions>>()
+                .Value;
+
+            if (string.Equals(configuredOptions.Provider, DatabaseInitializationOptions.InMemoryProvider, StringComparison.OrdinalIgnoreCase))
+            {
+                return new InMemoryDatabaseLifecycleManager();
+            }
+
+            if (!string.Equals(configuredOptions.Provider, DatabaseInitializationOptions.PostgreSqlProvider, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException($"Unsupported database provider '{configuredOptions.Provider}'.");
+            }
+
+            return ActivatorUtilities.CreateInstance<PostgreSqlDatabaseLifecycleManager>(serviceProvider);
+        });
         services.AddScoped<JwtTokenGenerator>();
         services.AddScoped<DemoDataSeeder>();
+        services.AddScoped<VpimsDbSeeder>();
         services.AddScoped<DatabaseInitializer>();
 
         services.AddScoped<IRoleRepository, RoleRepository>();
@@ -47,10 +78,12 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IAiVehicleInsightsService, RuleBasedAiVehicleInsightsService>();
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<ICustomerReportService, CustomerReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IFinancialReportService, FinancialReportService>();
+        services.AddScoped<IPartImageStorage>(_ => new LocalPartImageStorage(Path.Combine(webRootPath, "uploads", "parts")));
         services.AddScoped<IStaffManagementService, StaffManagementService>();
         services.AddScoped<IPartService, PartService>();
         services.AddScoped<IPartRequestService, PartRequestService>();
@@ -60,5 +93,48 @@ public static class DependencyInjection
         services.AddScoped<ISaleService, SalesService>();
 
         return services;
+    }
+
+    private static void ConfigureAppDbContext(
+        DbContextOptionsBuilder options,
+        DatabaseInitializationOptions databaseOptions,
+        string? connectionString)
+    {
+        if (string.Equals(databaseOptions.Provider, DatabaseInitializationOptions.InMemoryProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseInMemoryDatabase(BuildInMemoryDatabaseName(databaseOptions.InMemoryDatabaseName, "app"));
+            return;
+        }
+
+        options.UseNpgsql(RequireConnectionString(connectionString, databaseOptions.Provider));
+    }
+
+    private static void ConfigureStaffSalesDbContext(
+        DbContextOptionsBuilder options,
+        DatabaseInitializationOptions databaseOptions,
+        string? connectionString)
+    {
+        if (string.Equals(databaseOptions.Provider, DatabaseInitializationOptions.InMemoryProvider, StringComparison.OrdinalIgnoreCase))
+        {
+            options.UseInMemoryDatabase(BuildInMemoryDatabaseName(databaseOptions.InMemoryDatabaseName, "staff-sales"));
+            return;
+        }
+
+        options.UseNpgsql(RequireConnectionString(connectionString, databaseOptions.Provider));
+    }
+
+    private static string RequireConnectionString(string? connectionString, string provider)
+    {
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException($"Connection string 'defaultConnection' is required when using the {provider} provider.");
+        }
+
+        return connectionString;
+    }
+
+    private static string BuildInMemoryDatabaseName(string baseName, string suffix)
+    {
+        return $"{baseName}-{suffix}";
     }
 }

@@ -10,6 +10,11 @@ public sealed class UpdatePartRequest
 
     public string? Description { get; set; }
 
+    [StringLength(500)]
+    public string? ImageUrl { get; set; }
+
+    public bool RemoveImage { get; set; }
+
     [Range(0, double.MaxValue)]
     public decimal UnitPrice { get; set; }
 

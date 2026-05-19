@@ -12,6 +12,14 @@ public interface ICustomerRepository
 
     Task<Customer> RegisterCustomerAsync(User user, Customer customer, Vehicle? vehicle, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Customer>> GetUnlinkedRegistrationCandidatesAsync(
+        string phoneNumber,
+        string? email,
+        string? vehicleNumber,
+        CancellationToken cancellationToken = default);
+
+    Task<Customer> AttachPortalUserAsync(User user, Customer customer, Vehicle? vehicle, CancellationToken cancellationToken = default);
+
     Task<Customer> CreateStaffCustomerAsync(Customer customer, Vehicle vehicle, CancellationToken cancellationToken = default);
 
     Task<Customer?> GetByIdAsync(int customerId, CancellationToken cancellationToken = default);
@@ -21,6 +29,8 @@ public interface ICustomerRepository
     Task<Customer?> GetByUserIdAsync(int userId, CancellationToken cancellationToken = default);
 
     Task<Customer?> GetTrackedByUserIdAsync(int userId, CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Customer>> GetAllAsync(CancellationToken cancellationToken = default);
 
     Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default);
 
@@ -38,4 +48,6 @@ public interface ICustomerRepository
     Task<Vehicle> UpdateVehicleAsync(Vehicle vehicle, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<Vehicle>> GetVehiclesByCustomerIdAsync(int customerId, CancellationToken cancellationToken = default);
+
+    Task<Vehicle?> GetVehicleByCustomerIdAsync(int customerId, int vehicleId, CancellationToken cancellationToken = default);
 }

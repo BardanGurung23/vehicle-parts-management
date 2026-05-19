@@ -23,6 +23,7 @@ string requiredPhoneNumber = phoneNumber ?? throw new InvalidOperationException(
 string requiredPassword = password ?? throw new InvalidOperationException("Password is required.");
 
 string apiDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../Vpims.API"));
+string webRootPath = Path.Combine(apiDirectory, "wwwroot");
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
@@ -39,7 +40,7 @@ if (arguments.TryGetValue("connection-string", out string? connectionString) && 
     });
 }
 
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration, webRootPath);
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();
