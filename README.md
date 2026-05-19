@@ -80,7 +80,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Feature 16: Loyalty discount | ✅ Implemented | 10% discount is applied to qualifying purchases |
 | Feature 4: Purchase invoices | ✅ Implemented | Admin users can create and review purchase invoices |
 | Feature 1 / 9 / 15 | ✅ Implemented | Financial reports, customer reports, and automated notification workflows are live |
-| Feature 11 | 🟡 Partial | Invoice and alert email code paths are implemented, but live delivery still needs real SMTP credentials |
+| Feature 11 | 🟡 Partial | Invoice and alert email code paths are implemented, local Mailpit testing is configured, but live delivery still needs real SMTP credentials |
 
 ## 📈 Project Progress Snapshot
 
@@ -148,7 +148,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | --- | --- |
 | `dotnet build backend/vpims-backend.sln` | ✅ Passes |
 | `bash tests/run-backend-tests.sh` | ✅ Passes |
-| `dotnet test tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 36/36 tests |
+| `dotnet test tests/Vpims.Member4.Backend.Tests/Vpims.Member4.Backend.Tests.csproj` | ✅ Passes with 63/63 tests |
 | `dotnet run --project backend/tools/Vpims.DatabasePreflight` | ✅ Reports a compatible PostgreSQL database at `autonix_db` on this machine |
 | `dotnet run --project backend/Vpims.API --configuration Debug` | ✅ Direct startup remains available when the database is already compatible |
 | `npm --prefix frontend/admin run build` | ✅ Passes |
@@ -158,7 +158,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 
 ## ✉️ SMTP Configuration
 
-Both invoice emails and automated alert emails use the `InvoiceEmail` section in `backend/Vpims.API/appsettings.json`, environment variables, or .NET user secrets.
+Both invoice emails and automated alert emails use the shared `InvoiceEmail` section in `backend/Vpims.API/appsettings.json`, environment variables, or .NET user secrets. Delivery is handled by the MailKit-backed `EmailService` in Infrastructure.
 
 Required settings:
 
@@ -182,9 +182,24 @@ dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:FromName" "Aut
 dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:EnableSsl" "true"
 ```
 
-Default repository values are placeholders only. Local development keeps alert generation running even when SMTP is intentionally unset, but live invoice or alert delivery will not work until real mail-server values are supplied.
+Local Mailpit setup for development:
 
-With placeholder values, `SmtpEmailService` rejects delivery with a validation error stating that invoice email settings are incomplete. If the SMTP server accepts a connection but rejects delivery, the service returns a validation error asking the operator to verify the `InvoiceEmail` configuration.
+```bash
+docker run --rm -p 1025:1025 -p 8025:8025 axllent/mailpit
+```
+
+`backend/Vpims.API/appsettings.Development.json` is preconfigured for Mailpit with `Host=localhost`, `Port=1025`, empty credentials, and `EnableSsl=false`. Open `http://localhost:8025` to inspect locally delivered messages.
+
+Temporary development test route:
+
+- `POST /api/dev/test-email`
+- Admin authorization required
+- Returns a test-delivery response when the app is running in Development
+- Request body: `{"recipientEmail":"devtest@autonix.local","subject":"Mailpit check","message":"Smoke test"}`
+
+Default repository values in `appsettings.json` are intentionally non-working for live SMTP until deployment secrets are supplied. Local development keeps alert generation running even when SMTP is intentionally unset, but live invoice or alert delivery will not work until real mail-server values are supplied.
+
+With incomplete `InvoiceEmail` values, `EmailService` rejects delivery with a validation error stating that invoice email settings are incomplete. If the SMTP server accepts a connection but rejects delivery, the service returns a validation error asking the operator to verify the `InvoiceEmail` configuration.
 
 ## 👨‍👩‍👧‍👦 Member Assignment Tracking
 

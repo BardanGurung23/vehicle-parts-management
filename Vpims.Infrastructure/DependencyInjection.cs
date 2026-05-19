@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Vpims.Application.Common;
+using Vpims.Application.Interfaces;
 using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Domain.Entities;
@@ -23,6 +24,7 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<DatabaseInitializationOptions>(configuration.GetSection(DatabaseInitializationOptions.SectionName));
         services.Configure<AlertConfigurationOptions>(configuration.GetSection(AlertConfigurationOptions.SectionName));
+        services.Configure<InvoiceEmailOptions>(configuration.GetSection(InvoiceEmailOptions.SectionName));
 
         DatabaseInitializationOptions databaseOptions = configuration
             .GetSection(DatabaseInitializationOptions.SectionName)
@@ -80,7 +82,9 @@ public static class DependencyInjection
         services.AddScoped<IAppointmentService, AppointmentService>();
         services.AddScoped<IAiVehicleInsightsService, RuleBasedAiVehicleInsightsService>();
         services.AddScoped<IAlertService, AlertService>();
+        services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ICustomerReportService, CustomerReportService>();
+        services.AddScoped<IDevEmailService, DevEmailService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IFinancialReportService, FinancialReportService>();
         services.AddScoped<IPartImageStorage>(_ => new LocalPartImageStorage(Path.Combine(webRootPath, "uploads", "parts")));

@@ -14,7 +14,7 @@ public class InvoiceEmailOptions
 
     public string FromEmail { get; set; } = string.Empty;
 
-    public string FromName { get; set; } = "VPIMS";
+    public string FromName { get; set; } = "Autonix";
 
     public bool EnableSsl { get; set; } = true;
 }

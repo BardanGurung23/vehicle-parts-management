@@ -9,7 +9,6 @@ using Vpims.Application.Common;
 using Vpims.Application.Interfaces;
 
 using Vpims.Infrastructure;
-using Vpims.Infrastructure.Options;
 using Vpims.Infrastructure.Persistence;
 using Vpims.Infrastructure.Services;
 
@@ -29,11 +28,7 @@ builder.Services.AddInfrastructureServices(
     builder.Configuration,
     Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
 
-builder.Services.Configure<InvoiceEmailOptions>(
-    builder.Configuration.GetSection(InvoiceEmailOptions.SectionName));
-
 builder.Services.AddScoped<IStaffSalesService, StaffSalesService>();
-builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 builder.Services.AddHostedService<AlertGenerationBackgroundService>();
 
 //
