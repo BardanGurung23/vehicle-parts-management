@@ -62,6 +62,56 @@ public sealed class StaffManagementService(
         return UserMapper.ToStaffResponse(updatedUser);
     }
 
+    public async Task<StaffUserResponse> UpdateStaffAsync(int userId, UpdateStaffUserRequest request, CancellationToken cancellationToken = default)
+    {
+        User user = await userRepository.GetByIdAsync(userId, cancellationToken)
+            ?? throw new NotFoundException("Staff user not found.");
+
+        if (user.Role?.Name == SystemRoles.Customer)
+        {
+            throw new AppValidationException("Customer accounts cannot be managed from the staff area.");
+        }
+
+        if (request.FullName is not null)
+        {
+            user.FullName = InputNormalizer.NormalizeFullName(request.FullName);
+        }
+
+        if (request.Email is not null)
+        {
+            string email = InputNormalizer.NormalizeEmail(request.Email);
+            if (user.Email != email)
+            {
+                if (await userRepository.ExistsByEmailAsync(email, cancellationToken))
+                {
+                    throw new AppValidationException("A user with this email already exists.");
+                }
+                user.Email = email;
+            }
+        }
+
+        if (request.PhoneNumber is not null)
+        {
+            string phoneNumber = InputNormalizer.NormalizePhoneNumber(request.PhoneNumber);
+            if (user.PhoneNumber != phoneNumber)
+            {
+                if (await userRepository.ExistsByPhoneNumberAsync(phoneNumber, cancellationToken))
+                {
+                    throw new AppValidationException("A user with this phone number already exists.");
+                }
+                user.PhoneNumber = phoneNumber;
+            }
+        }
+
+        if (request.IsActive.HasValue)
+        {
+            user.IsActive = request.IsActive.Value;
+        }
+
+        User updatedUser = await userRepository.UpdateStaffAsync(user, cancellationToken);
+        return UserMapper.ToStaffResponse(updatedUser);
+    }
+
     public async Task<IReadOnlyList<RoleOptionResponse>> GetAssignableRolesAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<Role> roles = await roleRepository.GetAssignableStaffRolesAsync(cancellationToken);

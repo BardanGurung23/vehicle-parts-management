@@ -10,5 +10,7 @@ public interface IStaffManagementService
 
     Task<StaffUserResponse> UpdateStaffRoleAsync(int userId, UpdateStaffRoleRequest request, CancellationToken cancellationToken = default);
 
+    Task<StaffUserResponse> UpdateStaffAsync(int userId, UpdateStaffUserRequest request, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<RoleOptionResponse>> GetAssignableRolesAsync(CancellationToken cancellationToken = default);
 }
