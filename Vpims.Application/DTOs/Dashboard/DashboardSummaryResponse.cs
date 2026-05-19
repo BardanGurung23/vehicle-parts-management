@@ -11,5 +11,7 @@ public sealed class DashboardSummaryResponse
 
     public AlertSummaryResponse? Alerts { get; set; }
 
+    public IReadOnlyList<CustomerSearchResultResponse> RecentRegisteredCustomers { get; set; } = [];
+
     public CustomerDetailResponse? CurrentCustomer { get; set; }
 }
