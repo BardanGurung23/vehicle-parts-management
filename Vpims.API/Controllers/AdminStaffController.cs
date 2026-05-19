@@ -38,7 +38,7 @@ public sealed class AdminStaffController(IStaffManagementService staffManagement
         return Ok(response);
     }
 
-    [HttpPut("{userId:int}/role")]
+    [HttpPatch("{userId:int}/role")]
     public async Task<ActionResult<StaffUserResponse>> UpdateRole(
         int userId,
         [FromBody] UpdateStaffRoleRequest request,
