@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Vpims.Application.DTOs.Parts;
+namespace Vpims.API.Models.Parts;
 
-public sealed class UpdatePartRequest
+public sealed class UpdatePartFormRequest
 {
     [Required]
     [StringLength(150, MinimumLength = 1)]
@@ -12,6 +12,8 @@ public sealed class UpdatePartRequest
 
     [StringLength(500)]
     public string? ImageUrl { get; set; }
+
+    public IFormFile? ImageFile { get; set; }
 
     public bool RemoveImage { get; set; }
 

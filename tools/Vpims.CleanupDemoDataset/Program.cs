@@ -7,6 +7,7 @@ using Vpims.Infrastructure;
 using Vpims.Infrastructure.Persistence;
 
 string apiDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../Vpims.API"));
+string webRootPath = Path.Combine(apiDirectory, "wwwroot");
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();
@@ -15,7 +16,7 @@ builder.Configuration
     .AddJsonFile(Path.Combine(apiDirectory, "appsettings.Development.json"), optional: true)
     .AddEnvironmentVariables();
 
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(builder.Configuration, webRootPath);
 
 using IHost host = builder.Build();
 using IServiceScope scope = host.Services.CreateScope();

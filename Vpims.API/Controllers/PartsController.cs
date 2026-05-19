@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Vpims.API.Models.Parts;
 using Vpims.Application.DTOs.Parts;
 using Vpims.Application.Interfaces.Services;
 
@@ -35,18 +36,54 @@ public sealed class PartsController(IPartService partService) : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpPost]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType<PartResponse>(StatusCodes.Status201Created)]
-    public async Task<ActionResult<PartResponse>> Create([FromBody] CreatePartRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<PartResponse>> Create([FromForm] CreatePartFormRequest request, CancellationToken cancellationToken)
     {
-        var part = await partService.CreatePartAsync(request, cancellationToken);
+        await using Stream? imageStream = request.ImageFile?.OpenReadStream();
+        PartImageUpload? imageUpload = imageStream is null
+            ? null
+            : new PartImageUpload(request.ImageFile!.FileName, request.ImageFile.ContentType, imageStream, request.ImageFile.Length);
+
+        var part = await partService.CreatePartAsync(new CreatePartRequest
+        {
+            PartNumber = request.PartNumber,
+            PartName = request.PartName,
+            Description = request.Description,
+            ImageUrl = request.ImageUrl,
+            UnitPrice = request.UnitPrice,
+            CostPrice = request.CostPrice,
+            StockQuantity = request.StockQuantity,
+            ReorderLevel = request.ReorderLevel,
+            PartCategoryId = request.PartCategoryId,
+        }, imageUpload, cancellationToken);
+
         return CreatedAtAction(nameof(GetById), new { partId = part.PartId }, part);
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPut("{partId:int}")]
-    public async Task<ActionResult<PartResponse>> Update(int partId, [FromBody] UpdatePartRequest request, CancellationToken cancellationToken)
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<PartResponse>> Update(int partId, [FromForm] UpdatePartFormRequest request, CancellationToken cancellationToken)
     {
-        var part = await partService.UpdatePartAsync(partId, request, cancellationToken);
+        await using Stream? imageStream = request.ImageFile?.OpenReadStream();
+        PartImageUpload? imageUpload = imageStream is null
+            ? null
+            : new PartImageUpload(request.ImageFile!.FileName, request.ImageFile.ContentType, imageStream, request.ImageFile.Length);
+
+        var part = await partService.UpdatePartAsync(partId, new UpdatePartRequest
+        {
+            PartName = request.PartName,
+            Description = request.Description,
+            ImageUrl = request.ImageUrl,
+            RemoveImage = request.RemoveImage,
+            UnitPrice = request.UnitPrice,
+            CostPrice = request.CostPrice,
+            StockQuantity = request.StockQuantity,
+            ReorderLevel = request.ReorderLevel,
+            PartCategoryId = request.PartCategoryId,
+        }, imageUpload, cancellationToken);
+
         return Ok(part);
     }
 

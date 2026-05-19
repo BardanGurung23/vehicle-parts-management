@@ -18,7 +18,7 @@ namespace Vpims.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration, string webRootPath)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<DatabaseInitializationOptions>(configuration.GetSection(DatabaseInitializationOptions.SectionName));
@@ -83,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerReportService, CustomerReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IFinancialReportService, FinancialReportService>();
+        services.AddScoped<IPartImageStorage>(_ => new LocalPartImageStorage(Path.Combine(webRootPath, "uploads", "parts")));
         services.AddScoped<IStaffManagementService, StaffManagementService>();
         services.AddScoped<IPartService, PartService>();
         services.AddScoped<IPartRequestService, PartRequestService>();

@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.IdentityModel.Tokens;
 
 using Vpims.API.Middlewares;
@@ -16,11 +17,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 5 * 1024 * 1024;
+});
 
 //
 // Infrastructure Services
 //
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddInfrastructureServices(
+    builder.Configuration,
+    Path.Combine(builder.Environment.ContentRootPath, "wwwroot"));
 
 builder.Services.Configure<InvoiceEmailOptions>(
     builder.Configuration.GetSection(InvoiceEmailOptions.SectionName));

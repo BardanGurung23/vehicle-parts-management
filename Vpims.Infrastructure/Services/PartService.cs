@@ -7,7 +7,7 @@ using Vpims.Domain.Entities;
 
 namespace Vpims.Infrastructure.Services;
 
-public sealed class PartService(IPartRepository partRepository) : IPartService
+public sealed class PartService(IPartRepository partRepository, IPartImageStorage partImageStorage) : IPartService
 {
     public async Task<IReadOnlyList<PartResponse>> GetAllPartsAsync(CancellationToken cancellationToken = default)
     {
@@ -22,19 +22,23 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         return ToResponse(part);
     }
 
-    public async Task<PartResponse> CreatePartAsync(CreatePartRequest request, CancellationToken cancellationToken = default)
+    public async Task<PartResponse> CreatePartAsync(CreatePartRequest request, PartImageUpload? imageUpload = null, CancellationToken cancellationToken = default)
     {
         if (await partRepository.ExistsByPartNumberAsync(request.PartNumber.Trim(), cancellationToken))
             throw new AppValidationException($"A part with number '{request.PartNumber}' already exists.");
 
         await EnsureCategoryExistsAsync(request.PartCategoryId, cancellationToken);
 
+        string? imageUrl = imageUpload is null
+            ? NormalizeOptionalText(request.ImageUrl)
+            : await partImageStorage.SaveAsync(imageUpload, cancellationToken);
+
         var part = new Part
         {
             PartNumber = request.PartNumber.Trim(),
             PartName = request.PartName.Trim(),
             Description = NormalizeOptionalText(request.Description),
-            ImageUrl = NormalizeOptionalText(request.ImageUrl),
+            ImageUrl = imageUrl,
             UnitPrice = request.UnitPrice,
             CostPrice = request.CostPrice,
             StockQuantity = request.StockQuantity,
@@ -47,21 +51,43 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         return ToResponse(created);
     }
 
-    public async Task<PartResponse> UpdatePartAsync(int partId, UpdatePartRequest request, CancellationToken cancellationToken = default)
+    public async Task<PartResponse> UpdatePartAsync(int partId, UpdatePartRequest request, PartImageUpload? imageUpload = null, CancellationToken cancellationToken = default)
     {
         var part = await partRepository.GetByIdAsync(partId, cancellationToken)
             ?? throw new NotFoundException($"Part with id {partId} not found.");
 
         await EnsureCategoryExistsAsync(request.PartCategoryId, cancellationToken);
 
+        string? originalImageUrl = part.ImageUrl;
+        string? requestedImageUrl = NormalizeOptionalText(request.ImageUrl);
+        string? nextImageUrl = originalImageUrl;
+
+        if (imageUpload is not null)
+        {
+            nextImageUrl = await partImageStorage.SaveAsync(imageUpload, cancellationToken);
+        }
+        else if (request.RemoveImage)
+        {
+            nextImageUrl = null;
+        }
+        else if (requestedImageUrl is not null)
+        {
+            nextImageUrl = requestedImageUrl;
+        }
+
         part.PartName = request.PartName.Trim();
-    part.Description = NormalizeOptionalText(request.Description);
-    part.ImageUrl = NormalizeOptionalText(request.ImageUrl);
+        part.Description = NormalizeOptionalText(request.Description);
+        part.ImageUrl = nextImageUrl;
         part.UnitPrice = request.UnitPrice;
         part.CostPrice = request.CostPrice;
         part.StockQuantity = request.StockQuantity;
         part.ReorderLevel = request.ReorderLevel;
         part.PartCategoryId = request.PartCategoryId;
+
+        if (!string.Equals(originalImageUrl, nextImageUrl, StringComparison.Ordinal))
+        {
+            await partImageStorage.DeleteIfManagedAsync(originalImageUrl, cancellationToken);
+        }
 
         var updated = await partRepository.UpdateAsync(part, cancellationToken);
         return ToResponse(updated);

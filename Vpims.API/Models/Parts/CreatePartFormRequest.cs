@@ -1,9 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Vpims.Application.DTOs.Parts;
+namespace Vpims.API.Models.Parts;
 
-public sealed class UpdatePartRequest
+public sealed class CreatePartFormRequest
 {
+    [Required]
+    [StringLength(50, MinimumLength = 1)]
+    public string PartNumber { get; set; } = string.Empty;
+
     [Required]
     [StringLength(150, MinimumLength = 1)]
     public string PartName { get; set; } = string.Empty;
@@ -13,7 +17,7 @@ public sealed class UpdatePartRequest
     [StringLength(500)]
     public string? ImageUrl { get; set; }
 
-    public bool RemoveImage { get; set; }
+    public IFormFile? ImageFile { get; set; }
 
     [Range(0, double.MaxValue)]
     public decimal UnitPrice { get; set; }
@@ -25,7 +29,7 @@ public sealed class UpdatePartRequest
     public int StockQuantity { get; set; }
 
     [Range(0, int.MaxValue)]
-    public int ReorderLevel { get; set; }
+    public int ReorderLevel { get; set; } = 10;
 
     public int? PartCategoryId { get; set; }
 }
