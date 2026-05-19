@@ -1,0 +1,1666 @@
+{
+  "info": {
+    "name": "VPIMS API",
+    "description": "Vehicle Parts Inventory Management System - API Collection\n\n## Auth\n- Register/Login are public (no token needed)\n- For authenticated endpoints, set `authToken` variable after login\n\n## Variables\n- `baseUrl`: `https://localhost:7001` (adjust as needed)\n- `authToken`: paste JWT token here after login\n- `customerId`, `saleId`, `partId`, etc.: set from responses",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://localhost:7001",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phoneNumber\": \"9800000000\",\n  \"password\": \"password123\",\n  \"address\": \"Kathmandu, Nepal\",\n  \"vehicleNumber\": \"BA 1 PA 1234\",\n  \"vehicleModel\": \"Toyota Camry 2024\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Register a new customer (public)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Login - returns JWT token. Copy token into `authToken` variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Get current authenticated user profile"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "👤 Customers",
+      "item": [
+        {
+          "name": "Register Customer",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"phoneNumber\": \"9800000000\",\n  \"password\": \"password123\",\n  \"address\": \"Kathmandu, Nepal\",\n  \"vehicleNumber\": \"BA 1 PA 1234\",\n  \"vehicleModel\": \"Toyota Camry 2024\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "register"]
+            },
+            "description": "Register a new customer (public) - same as auth/register"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Customer (Staff)",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Jane Doe\",\n  \"phoneNumber\": \"9800000001\",\n  \"email\": \"jane@example.com\",\n  \"address\": \"Lalitpur, Nepal\",\n  \"vehicleNumber\": \"BA 1 PA 5678\",\n  \"vehicleModel\": \"Honda Civic 2023\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers"]
+            },
+            "description": "Create customer as Admin/Staff"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Customers",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/search?name=&phoneNumber=&vehicleNumber=&customerId=",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "search"],
+              "query": [
+                { "key": "name", "value": "", "disabled": true },
+                { "key": "phoneNumber", "value": "", "disabled": true },
+                { "key": "vehicleNumber", "value": "", "disabled": true },
+                { "key": "customerId", "value": "", "disabled": true }
+              ]
+            },
+            "description": "Search customers (Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Profile",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "me"]
+            },
+            "description": "Get current customer profile (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Profile",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"John Updated\",\n  \"phoneNumber\": \"9800000099\",\n  \"email\": \"john.new@example.com\",\n  \"address\": \"Pokhara, Nepal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "me"]
+            },
+            "description": "Update own profile (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "{{customerId}}"]
+            },
+            "description": "Get customer by ID (Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Appointments",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "{{customerId}}", "appointments"]
+            },
+            "description": "Get appointments for a customer (Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Sales",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/{{customerId}}/sales",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "{{customerId}}", "sales"]
+            },
+            "description": "Get sales for a customer (Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Add My Vehicle",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"BA 1 PA 9999\",\n  \"model\": \"Suzuki Swift 2024\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/me/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "me", "vehicles"]
+            },
+            "description": "Add a vehicle to own account (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update My Vehicle",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleNumber\": \"BA 1 PA 8888\",\n  \"model\": \"Suzuki Swift 2025\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/me/vehicles/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "me", "vehicles", "{{vehicleId}}"]
+            },
+            "description": "Update own vehicle (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete My Vehicle",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/me/vehicles/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "me", "vehicles", "{{vehicleId}}"]
+            },
+            "description": "Remove own vehicle (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Vehicles",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/customers/me/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "customers", "me", "vehicles"]
+            },
+            "description": "List own vehicles (Customer role)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Customer endpoints"
+    },
+    {
+      "name": "🛠️ Admin / Staff",
+      "item": [
+        {
+          "name": "List Staff",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff"]
+            },
+            "description": "List all staff users (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Staff",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ram Sharma\",\n  \"email\": \"ram@vpims.com\",\n  \"phoneNumber\": \"9800000100\",\n  \"password\": \"password123\",\n  \"roleId\": 2\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff"]
+            },
+            "description": "Create a new staff user (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Staff",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Ram Sharma Updated\",\n  \"email\": \"ram.updated@vpims.com\",\n  \"phoneNumber\": \"9800000101\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff", "{{userId}}"]
+            },
+            "description": "Update staff user details (Admin only). All fields optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Staff Role",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"roleId\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff/{{userId}}/role",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff", "{{userId}}", "role"]
+            },
+            "description": "Change staff user role (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "List Roles",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/staff/roles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "staff", "roles"]
+            },
+            "description": "Get assignable roles (Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Admin and staff management endpoints"
+    },
+    {
+      "name": "💰 Sales",
+      "item": [
+        {
+          "name": "Get My Sales",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales", "me"]
+            },
+            "description": "Get own sales (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sale By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sales/{{saleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales", "{{saleId}}"]
+            },
+            "description": "Get sale by ID (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Sale",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"vehicleId\": 1,\n  \"paymentStatus\": \"Paid\",\n  \"dueDate\": \"2026-06-19T00:00:00Z\",\n  \"notes\": \"Optional notes\",\n  \"items\": [\n    {\n      \"partId\": 1,\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sales",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "sales"]
+            },
+            "description": "Create a new sale (Customer/Admin/Staff). Only items is required."
+          },
+          "response": []
+        }
+      ],
+      "description": "Sales endpoints"
+    },
+    {
+      "name": "🔧 Parts",
+      "item": [
+        {
+          "name": "List All Parts",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/parts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "parts"]
+            },
+            "description": "Get all parts (Customer/Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Part By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/parts/{{partId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "parts", "{{partId}}"]
+            },
+            "description": "Get part by ID (Customer/Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "List Categories",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/parts/categories",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "parts", "categories"]
+            },
+            "description": "Get all part categories (Customer/Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Part",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partNumber\": \"BRK-001\",\n  \"partName\": \"Brake Pad Set\",\n  \"description\": \"Front brake pads for Toyota Camry\",\n  \"unitPrice\": 2500.00,\n  \"costPrice\": 1800.00,\n  \"stockQuantity\": 50,\n  \"reorderLevel\": 10,\n  \"partCategoryId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/parts",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "parts"]
+            },
+            "description": "Create a new part (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Part",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"partName\": \"Brake Pad Set Premium\",\n  \"description\": \"Premium front brake pads\",\n  \"unitPrice\": 3200.00,\n  \"costPrice\": 2200.00,\n  \"stockQuantity\": 40,\n  \"reorderLevel\": 8,\n  \"partCategoryId\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/parts/{{partId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "parts", "{{partId}}"]
+            },
+            "description": "Update a part (Admin only). Note: partNumber is not updatable."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Part",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/parts/{{partId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "parts", "{{partId}}"]
+            },
+            "description": "Delete a part (Admin only). Returns 204."
+          },
+          "response": []
+        }
+      ],
+      "description": "Parts inventory endpoints"
+    },
+    {
+      "name": "📄 Purchase Invoices",
+      "item": [
+        {
+          "name": "List Purchase Invoices",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/purchase-invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "purchase-invoices"]
+            },
+            "description": "List all purchase invoices (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Purchase Invoice By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/purchase-invoices/{{purchaseInvoiceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "purchase-invoices", "{{purchaseInvoiceId}}"]
+            },
+            "description": "Get purchase invoice by ID (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Purchase Invoice",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": 1,\n  \"status\": \"Completed\",\n  \"items\": [\n    {\n      \"partId\": 1,\n      \"quantity\": 10,\n      \"unitCost\": 1500.00\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/purchase-invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "purchase-invoices"]
+            },
+            "description": "Create a purchase invoice (Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Purchase invoice endpoints (Admin only)"
+    },
+    {
+      "name": "🏢 Vendors",
+      "item": [
+        {
+          "name": "List Vendors",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/vendors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "vendors"]
+            },
+            "description": "List all vendors (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Vendor By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/vendors/{{vendorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "vendors", "{{vendorId}}"]
+            },
+            "description": "Get vendor by ID (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Vendor",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorName\": \"Nepal Auto Parts Pvt Ltd\",\n  \"contactPerson\": \"Hari Adhikari\",\n  \"phoneNumber\": \"9800000200\",\n  \"email\": \"hari@nap.com\",\n  \"address\": \"Ratnapark, Kathmandu\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/vendors",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "vendors"]
+            },
+            "description": "Create a vendor (Admin only). Only vendorName required."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Vendor",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorName\": \"Nepal Auto Parts Updated\",\n  \"contactPerson\": \"Hari Adhikari\",\n  \"phoneNumber\": \"9800000201\",\n  \"email\": \"hari@nap.com\",\n  \"address\": \"New Baneshwor, Kathmandu\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/vendors/{{vendorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "vendors", "{{vendorId}}"]
+            },
+            "description": "Update a vendor (Admin only). All fields optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Vendor",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/vendors/{{vendorId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "vendors", "{{vendorId}}"]
+            },
+            "description": "Delete a vendor (Admin only). Returns 204."
+          },
+          "response": []
+        }
+      ],
+      "description": "Vendor endpoints (Admin only)"
+    },
+    {
+      "name": "📊 Dashboard",
+      "item": [
+        {
+          "name": "Get Dashboard Summary",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "dashboard", "summary"]
+            },
+            "description": "Get dashboard summary (Authenticated). Data varies by role."
+          },
+          "response": []
+        }
+      ],
+      "description": "Dashboard endpoints"
+    },
+    {
+      "name": "📈 Financial Reports",
+      "item": [
+        {
+          "name": "Daily Report",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/financial/daily?date=2026-05-19",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "financial", "daily"],
+              "query": [
+                { "key": "date", "value": "2026-05-19", "disabled": true }
+              ]
+            },
+            "description": "Daily financial report (Admin only). Date optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Monthly Report",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/financial/monthly?year=2026&month=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "financial", "monthly"],
+              "query": [
+                { "key": "year", "value": "2026", "disabled": true },
+                { "key": "month", "value": "5", "disabled": true }
+              ]
+            },
+            "description": "Monthly financial report (Admin only). Params optional."
+          },
+          "response": []
+        },
+        {
+          "name": "Yearly Report",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/admin/reports/financial/yearly?year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "admin", "reports", "financial", "yearly"],
+              "query": [
+                { "key": "year", "value": "2026", "disabled": true }
+              ]
+            },
+            "description": "Yearly financial report (Admin only). Year optional."
+          },
+          "response": []
+        }
+      ],
+      "description": "Financial report endpoints (Admin only)"
+    },
+    {
+      "name": "📋 Customer Reports",
+      "item": [
+        {
+          "name": "Get Customer Report",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reports/customers?startDate=2026-01-01&endDate=2026-05-19&highSpenderThreshold=50000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reports", "customers"],
+              "query": [
+                { "key": "startDate", "value": "2026-01-01", "disabled": true },
+                { "key": "endDate", "value": "2026-05-19", "disabled": true },
+                { "key": "highSpenderThreshold", "value": "50000", "disabled": true }
+              ]
+            },
+            "description": "Customer report (Admin/Staff). All params optional."
+          },
+          "response": []
+        }
+      ],
+      "description": "Customer report endpoints"
+    },
+    {
+      "name": "👨‍💼 Staff Sales",
+      "item": [
+        {
+          "name": "Search Customers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff-sales/customers?search=ram",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff-sales", "customers"],
+              "query": [
+                { "key": "search", "value": "ram", "disabled": true }
+              ]
+            },
+            "description": "Search customers for staff sales (no auth required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Search Parts",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff-sales/parts?search=brake",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff-sales", "parts"],
+              "query": [
+                { "key": "search", "value": "brake", "disabled": true }
+              ]
+            },
+            "description": "Search parts for staff sales (no auth required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Invoice",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n  \"items\": [\n    {\n      \"partId\": \"3fa85f64-5717-4562-b3fc-2c963f66afa6\",\n      \"quantity\": 2\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/staff-sales/invoices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff-sales", "invoices"]
+            },
+            "description": "Create a staff sale invoice (no auth required). Uses GUIDs."
+          },
+          "response": []
+        },
+        {
+          "name": "Send Invoice Email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/staff-sales/invoices/{{saleId}}/send-email",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "staff-sales", "invoices", "{{saleId}}", "send-email"]
+            },
+            "description": "Send invoice email (no auth required). saleId is GUID."
+          },
+          "response": []
+        }
+      ],
+      "description": "Staff sales endpoints (no auth required currently)"
+    },
+    {
+      "name": "⭐ Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointmentId\": 1,\n  \"rating\": 5,\n  \"comment\": \"Great service, highly recommended!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews"]
+            },
+            "description": "Create a service review (Customer role). Rating 1-5."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Reviews",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "me"]
+            },
+            "description": "Get own reviews (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Review By Appointment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/reviews/appointment/{{appointmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "reviews", "appointment", "{{appointmentId}}"]
+            },
+            "description": "Get review by appointment ID (public)"
+          },
+          "response": []
+        }
+      ],
+      "description": "Service review endpoints"
+    },
+    {
+      "name": "🔩 Part Requests",
+      "item": [
+        {
+          "name": "Create Part Request",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": 1,\n  \"requestedPartName\": \"Front Bumper\",\n  \"requestDetails\": \"Need for Toyota Camry 2024, color black\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/part-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "part-requests"]
+            },
+            "description": "Request a part (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Part Requests",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/part-requests/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "part-requests", "me"]
+            },
+            "description": "Get own part requests (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Part Requests",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/part-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "part-requests"]
+            },
+            "description": "List all part requests (Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Part Request By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/part-requests/{{requestId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "part-requests", "{{requestId}}"]
+            },
+            "description": "Get part request by ID (Admin/Staff/Customer)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Part Request Status",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Approved\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/part-requests/{{requestId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "part-requests", "{{requestId}}", "status"]
+            },
+            "description": "Update part request status (Admin/Staff). Values: Pending, Approved, Rejected, Fulfilled"
+          },
+          "response": []
+        }
+      ],
+      "description": "Part request endpoints"
+    },
+    {
+      "name": "📅 Appointments",
+      "item": [
+        {
+          "name": "Create Appointment",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicleId\": 1,\n  \"appointmentDate\": \"2026-05-25T10:00:00Z\",\n  \"serviceType\": \"Oil Change\",\n  \"notes\": \"Please also check brake pads\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments"]
+            },
+            "description": "Book an appointment (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Appointments",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "me"]
+            },
+            "description": "Get own appointments (Customer role)"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Appointments",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/list",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "list"]
+            },
+            "description": "List all appointments (Admin/Staff)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Appointment By ID",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "{{appointmentId}}"]
+            },
+            "description": "Get appointment by ID (Admin/Staff/Customer)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Appointment Status",
+          "auth": {
+            "type": "bearer",
+            "bearer": [
+              {
+                "key": "token",
+                "value": "{{authToken}}",
+                "type": "string"
+              }
+            ]
+          },
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Completed\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "appointments", "{{appointmentId}}", "status"]
+            },
+            "description": "Update appointment status (Admin/Staff). Values: Pending, InProgress, Completed, Cancelled"
+          },
+          "response": []
+        }
+      ],
+      "description": "Appointment booking endpoints"
+    }
+  ]
+}
