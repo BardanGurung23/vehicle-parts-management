@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Parts;
 using Vpims.Application.Interfaces.Repositories;
@@ -32,7 +33,8 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         {
             PartNumber = request.PartNumber.Trim(),
             PartName = request.PartName.Trim(),
-            Description = request.Description?.Trim(),
+            Description = NormalizeOptionalText(request.Description),
+            ImageUrl = NormalizeOptionalText(request.ImageUrl),
             UnitPrice = request.UnitPrice,
             CostPrice = request.CostPrice,
             StockQuantity = request.StockQuantity,
@@ -53,7 +55,8 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         await EnsureCategoryExistsAsync(request.PartCategoryId, cancellationToken);
 
         part.PartName = request.PartName.Trim();
-        part.Description = request.Description?.Trim();
+    part.Description = NormalizeOptionalText(request.Description);
+    part.ImageUrl = NormalizeOptionalText(request.ImageUrl);
         part.UnitPrice = request.UnitPrice;
         part.CostPrice = request.CostPrice;
         part.StockQuantity = request.StockQuantity;
@@ -68,7 +71,15 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
     {
         var part = await partRepository.GetByIdAsync(partId, cancellationToken)
             ?? throw new NotFoundException($"Part with id {partId} not found.");
-        await partRepository.DeleteAsync(part, cancellationToken);
+
+        try
+        {
+            await partRepository.DeleteAsync(part, cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            throw new AppValidationException("This part cannot be deleted because it is already referenced by sales or purchase invoices.");
+        }
     }
 
     public async Task<IReadOnlyList<PartCategoryResponse>> GetCategoriesAsync(CancellationToken cancellationToken = default)
@@ -101,6 +112,7 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         PartNumber = part.PartNumber ?? string.Empty,
         PartName = part.PartName ?? string.Empty,
         Description = part.Description,
+        ImageUrl = part.ImageUrl,
         UnitPrice = part.UnitPrice,
         CostPrice = part.CostPrice,
         StockQuantity = part.StockQuantity,
@@ -109,4 +121,11 @@ public sealed class PartService(IPartRepository partRepository) : IPartService
         CategoryName = part.Category?.CategoryName,
         CreatedAt = part.CreatedAt
     };
+
+    private static string? NormalizeOptionalText(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value)
+            ? null
+            : value.Trim();
+    }
 }

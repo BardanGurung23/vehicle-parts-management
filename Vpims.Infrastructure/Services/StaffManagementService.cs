@@ -62,6 +62,27 @@ public sealed class StaffManagementService(
         return UserMapper.ToStaffResponse(updatedUser);
     }
 
+    public async Task<StaffUserResponse> DeactivateStaffUserAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        User user = await userRepository.GetByIdAsync(userId, cancellationToken)
+            ?? throw new NotFoundException("Staff user not found.");
+
+        if (user.Role?.Name == SystemRoles.Customer)
+        {
+            throw new AppValidationException("Customer accounts cannot be managed from the staff area.");
+        }
+
+        if (!user.IsActive)
+        {
+            throw new AppValidationException("Staff user is already inactive.");
+        }
+
+        user.IsActive = false;
+
+        User updatedUser = await userRepository.UpdateAsync(user, cancellationToken);
+        return UserMapper.ToStaffResponse(updatedUser);
+    }
+
     public async Task<IReadOnlyList<RoleOptionResponse>> GetAssignableRolesAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<Role> roles = await roleRepository.GetAssignableStaffRolesAsync(cancellationToken);

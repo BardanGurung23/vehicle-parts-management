@@ -37,6 +37,13 @@ public sealed class AdminStaffController(IStaffManagementService staffManagement
         return Ok(response);
     }
 
+    [HttpDelete("{userId:int}")]
+    public async Task<ActionResult<StaffUserResponse>> Deactivate(int userId, CancellationToken cancellationToken)
+    {
+        StaffUserResponse response = await staffManagementService.DeactivateStaffUserAsync(userId, cancellationToken);
+        return Ok(response);
+    }
+
     [HttpGet("roles")]
     public async Task<ActionResult<IReadOnlyList<RoleOptionResponse>>> GetAssignableRoles(CancellationToken cancellationToken)
     {

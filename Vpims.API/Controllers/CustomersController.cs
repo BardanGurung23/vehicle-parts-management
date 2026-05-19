@@ -39,6 +39,14 @@ public sealed class CustomersController(
     }
 
     [Authorize(Roles = "Admin,Staff")]
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<CustomerSearchResultResponse>>> GetAll(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<CustomerSearchResultResponse> response = await customerService.GetCustomersAsync(cancellationToken);
+        return Ok(response);
+    }
+
+    [Authorize(Roles = "Admin,Staff")]
     [HttpGet("search")]
     public async Task<ActionResult<IReadOnlyList<CustomerSearchResultResponse>>> Search(
         [FromQuery] SearchCustomersRequest request,

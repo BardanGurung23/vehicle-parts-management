@@ -50,6 +50,49 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
         return (await GetByIdAsync(customer.CustomerId, cancellationToken))!;
     }
 
+    public async Task<IReadOnlyList<Customer>> GetUnlinkedRegistrationCandidatesAsync(
+        string phoneNumber,
+        string? email,
+        string? vehicleNumber,
+        CancellationToken cancellationToken = default)
+    {
+        IQueryable<Customer> query = dbContext.Customers
+            .Include(customer => customer.Vehicles)
+            .Where(customer => customer.UserId == null);
+
+        query = query.Where(customer =>
+            customer.PhoneNumber == phoneNumber
+            || (!string.IsNullOrWhiteSpace(email) && customer.Email == email)
+            || (!string.IsNullOrWhiteSpace(vehicleNumber) && customer.Vehicles.Any(vehicle => vehicle.VehicleNumber == vehicleNumber)));
+
+        return await query.ToListAsync(cancellationToken);
+    }
+
+    public async Task<Customer> AttachPortalUserAsync(
+        User user,
+        Customer customer,
+        Vehicle? vehicle,
+        CancellationToken cancellationToken = default)
+    {
+        await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        customer.UserId = user.UserId;
+
+        if (vehicle is not null)
+        {
+            vehicle.CustomerId = customer.CustomerId;
+            dbContext.Vehicles.Add(vehicle);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+
+        return (await GetByIdAsync(customer.CustomerId, cancellationToken))!;
+    }
+
     public async Task<Customer> CreateStaffCustomerAsync(Customer customer, Vehicle vehicle, CancellationToken cancellationToken = default)
     {
         await using IDbContextTransaction transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
@@ -90,6 +133,13 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
             .Include(customer => customer.User)
             .Include(customer => customer.Vehicles)
             .FirstOrDefaultAsync(customer => customer.UserId == userId, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Customer>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        return await QueryCustomers()
+            .OrderBy(customer => customer.FullName)
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<Customer> UpdateAsync(Customer customer, CancellationToken cancellationToken = default)

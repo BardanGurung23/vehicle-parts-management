@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-labelledby="title desc">
+  <title id="title">Headlamp illustration</title>
+  <desc id="desc">LED headlamp unit with beam detail.</desc>
+  <rect width="480" height="320" rx="28" fill="#0f172a"/>
+  <rect x="42" y="42" width="396" height="236" rx="24" fill="#eff6ff"/>
+  <path d="M114 162c24-52 84-84 150-84 44 0 88 12 124 34v100c-36 22-80 34-124 34-66 0-126-32-150-84z" fill="#1d4ed8"/>
+  <path d="M144 162c18-34 60-54 106-54 28 0 58 8 90 24v60c-32 16-62 24-90 24-46 0-88-20-106-54z" fill="#dbeafe"/>
+  <path d="M326 118l72-20M334 142l74-10M334 182l74 10M326 206l72 20" stroke="#60a5fa" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+</svg>

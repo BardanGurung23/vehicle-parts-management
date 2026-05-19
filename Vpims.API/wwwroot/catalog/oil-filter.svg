@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 320" role="img" aria-labelledby="title desc">
+  <title id="title">Oil filter illustration</title>
+  <desc id="desc">Oil filter canister with engine service theme.</desc>
+  <rect width="480" height="320" rx="28" fill="#0b1220"/>
+  <rect x="42" y="42" width="396" height="236" rx="24" fill="#f8fafc"/>
+  <ellipse cx="240" cy="110" rx="68" ry="24" fill="#1d4ed8"/>
+  <rect x="172" y="110" width="136" height="106" rx="22" fill="#2563eb"/>
+  <ellipse cx="240" cy="216" rx="68" ry="24" fill="#1e40af"/>
+  <rect x="202" y="92" width="76" height="18" rx="9" fill="#dbeafe"/>
+  <rect x="208" y="138" width="64" height="12" rx="6" fill="#dbeafe" opacity="0.9"/>
+  <rect x="194" y="160" width="92" height="10" rx="5" fill="#bfdbfe" opacity="0.9"/>
+  <circle cx="382" cy="88" r="20" fill="#22c55e"/>
+</svg>

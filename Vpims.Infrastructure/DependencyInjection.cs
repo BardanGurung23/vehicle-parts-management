@@ -8,6 +8,7 @@ using Vpims.Application.Interfaces.Repositories;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Domain.Entities;
 using Vpims.Infrastructure.Data;
+using Vpims.Infrastructure.Options;
 using Vpims.Infrastructure.Persistence;
 using Vpims.Infrastructure.Repositories;
 using Vpims.Infrastructure.Security;
@@ -21,6 +22,7 @@ public static class DependencyInjection
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<DatabaseInitializationOptions>(configuration.GetSection(DatabaseInitializationOptions.SectionName));
+        services.Configure<AlertConfigurationOptions>(configuration.GetSection(AlertConfigurationOptions.SectionName));
 
         DatabaseInitializationOptions databaseOptions = configuration
             .GetSection(DatabaseInitializationOptions.SectionName)

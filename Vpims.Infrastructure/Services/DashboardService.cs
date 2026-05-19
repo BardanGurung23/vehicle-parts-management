@@ -44,7 +44,8 @@ public sealed class DashboardService(
 
             return new DashboardSummaryResponse
             {
-                Inventory = BuildInventorySummary(parts)
+                Inventory = BuildInventorySummary(parts),
+                Alerts = await alertService.GetAlertSummaryAsync(cancellationToken)
             };
         }
 

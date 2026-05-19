@@ -14,6 +14,8 @@ public sealed class Part
 
     public string? Description { get; set; }
 
+    public string? ImageUrl { get; set; }
+
     public decimal UnitPrice { get; set; }
 
     public decimal CostPrice { get; set; }

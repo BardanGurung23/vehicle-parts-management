@@ -25,7 +25,11 @@ public sealed class PartRepository(AppDbContext dbContext) : IPartRepository
 
     public Task<bool> ExistsByPartNumberAsync(string partNumber, CancellationToken cancellationToken = default)
     {
-        return dbContext.Parts.AnyAsync(p => p.PartNumber == partNumber, cancellationToken);
+        string normalizedPartNumber = partNumber.Trim().ToUpperInvariant();
+
+        return dbContext.Parts.AnyAsync(
+            p => p.PartNumber.ToUpper() == normalizedPartNumber,
+            cancellationToken);
     }
 
     public Task<bool> CategoryExistsAsync(int partCategoryId, CancellationToken cancellationToken = default)

@@ -9,6 +9,8 @@ public interface ICustomerService
 
     Task<CustomerDetailResponse> CreateCustomerAsync(CreateCustomerRequest request, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<CustomerSearchResultResponse>> GetCustomersAsync(CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<CustomerSearchResultResponse>> SearchCustomersAsync(SearchCustomersRequest request, CancellationToken cancellationToken = default);
 
     Task<CustomerDetailResponse> GetCustomerByIdAsync(int customerId, CancellationToken cancellationToken = default);

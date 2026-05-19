@@ -69,6 +69,12 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
         return await GetRequiredUserAsync(user.UserId, cancellationToken);
     }
 
+    public async Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default)
+    {
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetRequiredUserAsync(user.UserId, cancellationToken);
+    }
+
     private async Task<User> GetRequiredUserAsync(int userId, CancellationToken cancellationToken)
     {
         return await dbContext.Users

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Auth;
 using Vpims.Application.DTOs.Sales;
 using Vpims.Application.Interfaces.Services;
@@ -27,7 +28,7 @@ public sealed class SalesController : ControllerBase
         return Ok(sales);
     }
 
-    [Authorize(Roles = "Customer")]
+    [Authorize(Roles = "Customer,Admin,Staff")]
     [HttpGet("{saleId:int}")]
     [ProducesResponseType<SaleResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -37,6 +38,29 @@ public sealed class SalesController : ControllerBase
         var user = GetCurrentUserProfile();
         var sale = await _salesService.GetSaleByIdAsync(saleId, user, cancellationToken);
         return Ok(sale);
+    }
+
+    [Authorize(Roles = "Customer,Admin,Staff")]
+    [HttpPost("{saleId:int}/send-email")]
+    [ProducesResponseType<SendSaleInvoiceEmailResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<SendSaleInvoiceEmailResponse>> SendInvoiceEmail(int saleId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var user = GetCurrentUserProfile();
+            var response = await _salesService.SendInvoiceEmailAsync(saleId, user, cancellationToken);
+            return Ok(response);
+        }
+        catch (AppValidationException exception)
+        {
+            return BadRequest(new { message = exception.Message });
+        }
+        catch (NotFoundException exception)
+        {
+            return NotFound(new { message = exception.Message });
+        }
     }
 
     [Authorize(Roles = "Customer,Admin,Staff")]
