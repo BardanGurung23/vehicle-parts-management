@@ -79,7 +79,7 @@ public sealed class StaffManagementService(
 
         user.IsActive = false;
 
-        User updatedUser = await userRepository.UpdateAsync(user, cancellationToken);
+        User updatedUser = await userRepository.UpdateStaffAsync(user, cancellationToken);
         return UserMapper.ToStaffResponse(updatedUser);
     }
 
