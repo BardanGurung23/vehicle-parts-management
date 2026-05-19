@@ -220,4 +220,11 @@ public sealed class CustomerRepository(AppDbContext dbContext) : ICustomerReposi
             .OrderByDescending(v => v.CreatedAt)
             .ToListAsync(cancellationToken);
     }
+
+    public async Task<Vehicle?> GetVehicleByCustomerIdAsync(int customerId, int vehicleId, CancellationToken cancellationToken = default)
+    {
+        return await dbContext.Vehicles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(v => v.CustomerId == customerId && v.VehicleId == vehicleId, cancellationToken);
+    }
 }

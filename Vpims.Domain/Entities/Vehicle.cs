@@ -10,6 +10,12 @@ public sealed class Vehicle
 
     public string? Model { get; set; }
 
+    public int? Mileage { get; set; }
+
+    public int? ManufactureYear { get; set; }
+
+    public DateTimeOffset? LastServiceDate { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public Customer? Customer { get; set; }

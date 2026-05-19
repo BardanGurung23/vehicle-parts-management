@@ -494,6 +494,55 @@ public sealed class CustomerService(
         return model;
     }
 
+    private static int? NormalizeOptionalMileage(int? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        if (value.Value < 0 || value.Value > 2_000_000)
+        {
+            throw new AppValidationException("Vehicle mileage must be between 0 and 2,000,000 km.");
+        }
+
+        return value.Value;
+    }
+
+    private static int? NormalizeOptionalManufactureYear(int? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        int latestAllowedYear = DateTimeOffset.UtcNow.Year + 1;
+
+        if (value.Value < 1950 || value.Value > latestAllowedYear)
+        {
+            throw new AppValidationException($"Vehicle manufacture year must be between 1950 and {latestAllowedYear}.");
+        }
+
+        return value.Value;
+    }
+
+    private static DateTimeOffset? NormalizeOptionalLastServiceDate(DateTimeOffset? value)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        DateTimeOffset serviceDate = value.Value.ToUniversalTime();
+
+        if (serviceDate > DateTimeOffset.UtcNow.AddDays(1))
+        {
+            throw new AppValidationException("Last service date cannot be in the future.");
+        }
+
+        return serviceDate;
+    }
+
     public async Task<VehicleResponse> AddVehicleAsync(
         UserProfileResponse currentUser,
         CreateVehicleRequest request,
@@ -513,6 +562,9 @@ public sealed class CustomerService(
         {
             VehicleNumber = vehicleNumber,
             Model = NormalizeOptionalModel(request.Model),
+            Mileage = NormalizeOptionalMileage(request.Mileage),
+            ManufactureYear = NormalizeOptionalManufactureYear(request.ManufactureYear),
+            LastServiceDate = NormalizeOptionalLastServiceDate(request.LastServiceDate),
             CreatedAt = DateTimeOffset.UtcNow
         };
 
@@ -542,6 +594,9 @@ public sealed class CustomerService(
 
         vehicle.VehicleNumber = vehicleNumber;
         vehicle.Model = NormalizeOptionalModel(request.Model);
+    vehicle.Mileage = NormalizeOptionalMileage(request.Mileage);
+    vehicle.ManufactureYear = NormalizeOptionalManufactureYear(request.ManufactureYear);
+    vehicle.LastServiceDate = NormalizeOptionalLastServiceDate(request.LastServiceDate);
 
         Vehicle updatedVehicle = await customerRepository.UpdateVehicleAsync(vehicle, cancellationToken);
         return UserMapper.ToVehicleResponse(updatedVehicle);

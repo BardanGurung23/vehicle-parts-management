@@ -78,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
+        services.AddScoped<IAiVehicleInsightsService, RuleBasedAiVehicleInsightsService>();
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<ICustomerReportService, CustomerReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
