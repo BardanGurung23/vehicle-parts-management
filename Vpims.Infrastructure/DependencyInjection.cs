@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.Configure<DatabaseInitializationOptions>(configuration.GetSection(DatabaseInitializationOptions.SectionName));
         services.Configure<AlertConfigurationOptions>(configuration.GetSection(AlertConfigurationOptions.SectionName));
         services.Configure<InvoiceEmailOptions>(configuration.GetSection(InvoiceEmailOptions.SectionName));
+        services.Configure<PasswordResetOptions>(configuration.GetSection(PasswordResetOptions.SectionName));
 
         DatabaseInitializationOptions databaseOptions = configuration
             .GetSection(DatabaseInitializationOptions.SectionName)
@@ -65,6 +66,7 @@ public static class DependencyInjection
 
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPasswordResetTokenRepository, PasswordResetTokenRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICustomerReportRepository, CustomerReportRepository>();
         services.AddScoped<IFinancialReportRepository, FinancialReportRepository>();

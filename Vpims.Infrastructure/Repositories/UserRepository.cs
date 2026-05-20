@@ -61,6 +61,12 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<User> UpdateAsync(User user, CancellationToken cancellationToken = default)
+    {
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return await GetRequiredUserAsync(user.UserId, cancellationToken);
+    }
+
     public async Task<User> UpdateRoleAsync(User user, int roleId, CancellationToken cancellationToken = default)
     {
         user.RoleId = roleId;
@@ -71,8 +77,7 @@ public sealed class UserRepository(AppDbContext dbContext) : IUserRepository
 
     public async Task<User> UpdateStaffAsync(User user, CancellationToken cancellationToken = default)
     {
-        await dbContext.SaveChangesAsync(cancellationToken);
-        return await GetRequiredUserAsync(user.UserId, cancellationToken);
+        return await UpdateAsync(user, cancellationToken);
     }
 
     private async Task<User> GetRequiredUserAsync(int userId, CancellationToken cancellationToken)

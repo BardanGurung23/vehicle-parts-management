@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "VPIMS API",
-    "description": "Vehicle Parts Inventory Management System - API Collection\n\n## Auth\n- Register/Login are public (no token needed)\n- For authenticated endpoints, set `authToken` variable after login\n\n## Variables\n- `baseUrl`: `https://localhost:7001` (adjust as needed)\n- `authToken`: paste JWT token here after login\n- `customerId`, `saleId`, `partId`, etc.: set from responses",
+    "description": "Vehicle Parts Inventory Management System - API Collection\n\n## Auth\n- Register/Login/Forgot Password/Reset Password are public (no token needed)\n- For authenticated endpoints, set `authToken` variable after login\n\n## Variables\n- `baseUrl`: `https://localhost:7001` (adjust as needed)\n- `authToken`: paste JWT token here after login\n- `customerId`, `saleId`, `partId`, etc.: set from responses",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -73,6 +73,75 @@
               "path": ["api", "auth", "login"]
             },
             "description": "Login - returns JWT token. Copy token into `authToken` variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "forgot-password"]
+            },
+            "description": "Request a password reset link for an active account. The response is intentionally generic."
+          },
+          "response": []
+        },
+        {
+          "name": "Validate Reset Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"paste-reset-token-here\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password", "validate"]
+            },
+            "description": "Validate whether a password reset token is still active before submitting the new password."
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"paste-reset-token-here\",\n  \"password\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "reset-password"]
+            },
+            "description": "Set a new password using a valid reset token."
           },
           "response": []
         },

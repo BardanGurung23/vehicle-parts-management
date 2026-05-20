@@ -16,7 +16,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | 🏷️ Area | 🚦 Status | Notes |
 | --- | --- | --- |
 | Architecture | ✅ Complete | Flow remains Controller -> Service -> Repository -> DbContext |
-| Auth | ✅ Implemented | Canonical self-registration and login live under `/api/auth/*` |
+| Auth | ✅ Implemented | Canonical self-registration, login, forgot-password request, reset-token validation, and password reset live under `/api/auth/*` |
 | Final schema | ✅ Implemented | EF Core baseline migration is the single schema authority |
 | Dev/test reset | ✅ Implemented | Guided preflight validates PostgreSQL availability, protects non-demo local data, and recreates incompatible local DBs only after explicit confirmation |
 | Customer flows | ✅ Implemented | Staff create/search/detail plus customer signup, profile update, and vehicle add/edit/remove flows are live |
@@ -54,7 +54,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 
 | 🌐 Area | Endpoints |
 | --- | --- |
-| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me` |
+| Auth | `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/forgot-password`, `POST /api/auth/reset-password/validate`, `POST /api/auth/reset-password`, `GET /api/auth/me` |
 | Customer self-service | `POST /api/customers/register`, `GET /api/customers/me`, `PUT /api/customers/me`, `GET /api/customers/me/vehicles`, `POST /api/customers/me/vehicles`, `PUT /api/customers/me/vehicles/{vehicleId}`, `DELETE /api/customers/me/vehicles/{vehicleId}` |
 | Staff customer management | `POST /api/customers`, `GET /api/customers/search`, `GET /api/customers/{customerId}` |
 | Staff admin | `GET /api/admin/staff`, `POST /api/admin/staff`, `GET /api/admin/staff/roles`, `PUT /api/admin/staff/{userId}/role` |
@@ -102,6 +102,7 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 | ASP.NET Core API with controllers, JWT auth, RBAC, CORS, and exception middleware | ✅ |
 | Clean Architecture solution with API, Application, Domain, Infrastructure, and CLI tooling | ✅ |
 | EF Core baseline migration as the single final schema authority | ✅ |
+| Auth password-reset flow with email-link recovery tokens, reset validation, and password updates | ✅ |
 | Cross-platform database preflight plus guided reset workflow | ✅ |
 | Customer self-registration, login, current-customer detail, profile update, vehicle add/edit/remove | ✅ |
 | Staff management end to end | ✅ |

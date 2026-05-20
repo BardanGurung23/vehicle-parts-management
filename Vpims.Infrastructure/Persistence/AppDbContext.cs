@@ -36,6 +36,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     public DbSet<PredictiveAlert> PredictiveAlerts => Set<PredictiveAlert>();
 
+    public DbSet<PasswordResetToken> PasswordResetTokens => Set<PasswordResetToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new RoleConfiguration());
@@ -53,5 +55,6 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
         modelBuilder.ApplyConfiguration(new PurchaseInvoiceConfiguration());
         modelBuilder.ApplyConfiguration(new PurchaseInvoiceItemConfiguration());
         modelBuilder.ApplyConfiguration(new PredictiveAlertConfiguration());
+        modelBuilder.ApplyConfiguration(new PasswordResetTokenConfiguration());
     }
 }
