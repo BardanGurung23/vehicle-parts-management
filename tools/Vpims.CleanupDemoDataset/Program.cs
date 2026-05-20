@@ -4,10 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Vpims.Domain.Entities;
 using Vpims.Infrastructure;
+using Vpims.Infrastructure.Configuration;
 using Vpims.Infrastructure.Persistence;
 
 string apiDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../Vpims.API"));
 string webRootPath = Path.Combine(apiDirectory, "wwwroot");
+
+EnvironmentFileLoader.Load(apiDirectory);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();

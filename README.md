@@ -158,10 +158,20 @@ This section mirrors the current state recorded in `doc/progress.md`, formatted 
 
 ## ✉️ SMTP Configuration
 
-Both invoice emails and automated alert emails use the shared `InvoiceEmail` section in `backend/Vpims.API/appsettings.json`, environment variables, or .NET user secrets. Delivery is handled by the MailKit-backed `EmailService` in Infrastructure.
+Both invoice emails and automated alert emails use the shared `InvoiceEmail` section. Delivery is handled by the MailKit-backed `EmailService` in Infrastructure. Runtime secrets should come from `backend/.env`, hosting-provider environment variables, or .NET user secrets, not committed appsettings files.
+
+Local `.env` setup:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Replace the placeholders in `backend/.env`. The API and backend tools load this file before their host builders are created, and ASP.NET Core reads nested keys with double underscores.
 
 Required settings:
 
+- `ConnectionStrings__defaultConnection`
+- `Jwt__Key`
 - `InvoiceEmail__Host`
 - `InvoiceEmail__Port`
 - `InvoiceEmail__Username`
@@ -170,7 +180,21 @@ Required settings:
 - `InvoiceEmail__FromName`
 - `InvoiceEmail__EnableSsl`
 
-Example .NET user-secret setup:
+Gmail SMTP example:
+
+```bash
+InvoiceEmail__Host=smtp.gmail.com
+InvoiceEmail__Port=587
+InvoiceEmail__Username=your-gmail-address@gmail.com
+InvoiceEmail__Password=your-gmail-app-password
+InvoiceEmail__FromEmail=your-gmail-address@gmail.com
+InvoiceEmail__FromName=Autonix
+InvoiceEmail__EnableSsl=true
+```
+
+Gmail SMTP requires a Gmail app password. Do not put the normal account password in any config file.
+
+Example .NET user-secret setup if you prefer user secrets instead of `backend/.env`:
 
 ```bash
 dotnet user-secrets --project backend/Vpims.API set "InvoiceEmail:Host" "smtp.mailhost.local"
@@ -197,7 +221,7 @@ Temporary development test route:
 - Returns a test-delivery response when the app is running in Development
 - Request body: `{"recipientEmail":"devtest@autonix.local","subject":"Mailpit check","message":"Smoke test"}`
 
-Default repository values in `appsettings.json` are intentionally non-working for live SMTP until deployment secrets are supplied. Local development keeps alert generation running even when SMTP is intentionally unset, but live invoice or alert delivery will not work until real mail-server values are supplied.
+Default repository values in `appsettings.json` are intentionally non-secret placeholders until deployment secrets are supplied. Local development keeps alert generation running even when SMTP is intentionally unset, but live invoice or alert delivery will not work until real mail-server values are supplied.
 
 With incomplete `InvoiceEmail` values, `EmailService` rejects delivery with a validation error stating that invoice email settings are incomplete. If the SMTP server accepts a connection but rejects delivery, the service returns a validation error asking the operator to verify the `InvoiceEmail` configuration.
 

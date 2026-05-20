@@ -5,6 +5,7 @@ using Vpims.Application.Common.Exceptions;
 using Vpims.Application.DTOs.Users;
 using Vpims.Application.Interfaces.Services;
 using Vpims.Infrastructure;
+using Vpims.Infrastructure.Configuration;
 
 var arguments = ParseArguments(args);
 
@@ -24,6 +25,8 @@ string requiredPassword = password ?? throw new InvalidOperationException("Passw
 
 string apiDirectory = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../Vpims.API"));
 string webRootPath = Path.Combine(apiDirectory, "wwwroot");
+
+EnvironmentFileLoader.Load(apiDirectory);
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 builder.Configuration.Sources.Clear();

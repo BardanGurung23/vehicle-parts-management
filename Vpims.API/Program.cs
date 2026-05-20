@@ -9,8 +9,11 @@ using Vpims.Application.Common;
 using Vpims.Application.Interfaces;
 
 using Vpims.Infrastructure;
+using Vpims.Infrastructure.Configuration;
 using Vpims.Infrastructure.Persistence;
 using Vpims.Infrastructure.Services;
+
+EnvironmentFileLoader.Load(AppContext.BaseDirectory);
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +41,12 @@ var jwtSettings = builder.Configuration
     .GetSection(JwtSettings.SectionName)
     .Get<JwtSettings>()
     ?? throw new InvalidOperationException("JWT settings are missing.");
+
+if (string.IsNullOrWhiteSpace(jwtSettings.Key) ||
+    jwtSettings.Key.StartsWith("replace-with-", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("JWT signing key is missing. Set Jwt__Key in backend/.env or the host environment.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

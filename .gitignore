@@ -19,7 +19,11 @@ Thumbs.db
 *.log
 
 # Environment
+.env
+.env.*
+!.env.example
 appsettings.Development.json
+appsettings.*.local.json
 scripts/bootstrap-first-admin.sh
 
 # Ignore all Markdown except README.md
