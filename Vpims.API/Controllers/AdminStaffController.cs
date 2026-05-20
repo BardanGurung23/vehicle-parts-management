@@ -27,7 +27,18 @@ public sealed class AdminStaffController(IStaffManagementService staffManagement
         return CreatedAtAction(nameof(GetStaff), new { id = response.UserId }, response);
     }
 
-    [HttpPut("{userId:int}/role")]
+    [HttpPut("{userId:int}")]
+    [ProducesResponseType<StaffUserResponse>(StatusCodes.Status200OK)]
+    public async Task<ActionResult<StaffUserResponse>> UpdateStaff(
+        int userId,
+        [FromBody] UpdateStaffUserRequest request,
+        CancellationToken cancellationToken)
+    {
+        StaffUserResponse response = await staffManagementService.UpdateStaffAsync(userId, request, cancellationToken);
+        return Ok(response);
+    }
+
+    [HttpPatch("{userId:int}/role")]
     public async Task<ActionResult<StaffUserResponse>> UpdateRole(
         int userId,
         [FromBody] UpdateStaffRoleRequest request,

@@ -54,7 +54,7 @@ public sealed class PartRequestsController(
     }
 
     [Authorize(Roles = "Admin,Staff")]
-    [HttpPut("{requestId:int}/status")]
+    [HttpPatch("{requestId:int}/status")]
     [ProducesResponseType<PartRequestResponse>(StatusCodes.Status200OK)]
     public async Task<ActionResult<PartRequestResponse>> UpdateStatus(
         int requestId,
