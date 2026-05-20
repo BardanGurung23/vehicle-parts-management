@@ -22,7 +22,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Customer flows | ✅ Implemented | Staff create/search/detail plus customer signup, profile update, and vehicle add/edit/remove flows are live |
 | Staff admin | ✅ Implemented | Staff list, create, roles, and role update are live |
 | Vendors | ✅ Implemented | Vendor CRUD is available for admin users |
-| Appointments | ✅ Implemented | Customer booking and admin status management are live |
+| Appointments | ✅ Implemented | Customer booking and employee status management are live |
 | Sales | ✅ Implemented | Sales invoices, totals, and loyalty discount are live |
 | Purchase invoices | ✅ Implemented | Admin purchase-invoice creation and recent-invoice listing are live |
 | Notifications/reports | ✅ Implemented | Financial reports, customer reports, and automated alerts are in place |
@@ -61,7 +61,7 @@ When backend endpoints, DTOs, commands, architecture boundaries, or verification
 | Dashboard | `GET /api/dashboard/summary` |
 | Parts | List, detail, create, update, and delete endpoints under `/api/parts` |
 | Vendors | CRUD endpoints under `/api/admin/vendors` |
-| Appointments | Customer and admin flows under `/api/appointments` |
+| Appointments | Customer and employee flows under `/api/appointments` |
 | Sales | Customer and employee-assisted flows under `/api/sales` |
 | Part requests | Customer and admin flows under `/api/part-requests` |
 | Reviews | Customer review flows under `/api/reviews` |
